@@ -1,0 +1,38 @@
+Message =
+	| TextMessage of Unicode * Metadata
+      | MediaMessage of MediaReference * Metadata
+      | TitledMediaMessage of Unicode * MediaReference * Metadata
+	with
+		abstract member this.ContainsLink() : boolean
+		abstract member this.UpdateMetadata() : Message
+
+MediaReference =
+	| ImageRef of StoredImageId
+      | VideoRef of StoredVideoId
+	with
+		abstract member this.GeneratePreview() : MediaPreview
+		abstract member this.StoreLocally() : DialogResult
+
+Mailbox = Set<Conversation>
+
+ConversationState =
+	CountTotal : int
+	CountLoaded : int
+	LastUpdated : DateTime
+
+Conversation = 
+	| Group of ConvId * IEnumerable<Message> * ConversationState
+	| OneToOne of ConvId * IEnumerable<Message> * ConversationState
+	with
+		abstract member this.UpdateConversation() : Conversation
+		abstract member this.SendMessage(msg : OriginalMessage) : Metadata
+		abstract member this.SendSuccessfull(msg : OriginalMessage, md: Metadata) : Conversation
+
+OriginalMessage =
+	| OgTextMessage of sender: UserId * conversation: ConvId * Unicode
+	| OgMediaMessage of sender: UserId * conversation: ConvId * MediaTransferRequest
+	| OgTitledMediaMessage of sender: UserId * conversation: ConvId * title: Unicode * MediaTransferRequest
+
+User = UserId * Mailbox * UserOptions
+	with
+		abstract member this.UpdateMailbox() : Mailbox
