@@ -4,8 +4,8 @@ namespace pljaf.server.model;
 
 public interface IUserGrain : IGrainWithGuidKey
 {
-    Guid Id { get; }
-    Media? Avatar { get; }
+    Task<Guid> GetIdAsync();
+    Task<Media?> GetAvatarAsync();
 
     Task<Options> GetOptionsAsync();
     Task SetOptionsAsync(Options options);

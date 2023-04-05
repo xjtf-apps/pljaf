@@ -5,8 +5,6 @@ namespace pljaf.server.model;
 
 public class MessageGrain : Grain, IMessageGrain
 {
-    public Guid Id => this.GetGrainId().GetGuidKey();
-
     private readonly IPersistentState<IUserGrain> _sender;
     private readonly IPersistentState<DateTime> _timestamp;
     private readonly IPersistentState<Media?> _mediaReference;
@@ -24,10 +22,11 @@ public class MessageGrain : Grain, IMessageGrain
         _encryptedTextData = encryptedTextData;
     }
 
-    public IUserGrain Sender => _sender.State;
-    public DateTime Timestamp => _timestamp.State;
-    public Media? MediaReference => _mediaReference.State;
-    public byte[] EncryptedTextData => _encryptedTextData.State;
+    public async Task<Guid> GetIdAsync() => await Task.FromResult(this.GetGrainId().GetGuidKey());
+    public async Task<IUserGrain> GetSenderAsync() => await Task.FromResult(_sender.State);
+    public async Task<DateTime> GetTimestampAsync() => await Task.FromResult(_timestamp.State);
+    public async Task<Media?> GetMediaReferenceAsync() => await Task.FromResult(_mediaReference.State);
+    public async Task<byte[]> GetEncryptedTextDataAsync() => await Task.FromResult(_encryptedTextData.State);
 
     public async Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData, Media? mediaReference = null)
     {

@@ -4,7 +4,7 @@ namespace pljaf.server.model;
 
 public interface IConversationGrain : IGrainWithGuidKey
 {
-    Guid Id { get; }
+    Task<Guid> GetIdAsync();
 
     Task PostMessageAsync(IMessageGrain message);
     Task<string> GetNameAsync();

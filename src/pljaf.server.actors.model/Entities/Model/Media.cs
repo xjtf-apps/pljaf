@@ -5,5 +5,5 @@ namespace pljaf.server.model;
 [GenerateSerializer]
 public class Media
 {
-    [Id(0)] public required Guid StoreId { get; set; }
+    [Id(0)] public Guid StoreId { get; set; }
 }

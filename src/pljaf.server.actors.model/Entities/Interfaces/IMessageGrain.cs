@@ -4,12 +4,12 @@ namespace pljaf.server.model;
 
 public interface IMessageGrain : IGrainWithGuidKey
 {
-    Guid Id { get; }
-    IUserGrain Sender { get; }
-    DateTime Timestamp { get; }
+    Task<Guid> GetIdAsync();
+    Task<IUserGrain> GetSenderAsync();
+    Task<DateTime> GetTimestampAsync();
 
-    Media? MediaReference { get; }
-    byte[] EncryptedTextData { get; }
+    Task<Media?> GetMediaReferenceAsync();
+    Task<byte[]> GetEncryptedTextDataAsync();
 
     Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData, Media? mediaReference = null);
 }

@@ -5,9 +5,6 @@ namespace pljaf.server.model;
 
 public class UserGrain : Grain, IUserGrain
 {
-    public Guid Id => this.GetGrainId().GetGuidKey();
-    public Media? Avatar => _profile.State.ProfilePicture;
-
     private readonly IPersistentState<Options> _options;
     private readonly IPersistentState<Profile> _profile;
     private readonly IPersistentState<List<IUserGrain>> _contacts;
@@ -24,6 +21,9 @@ public class UserGrain : Grain, IUserGrain
         _contacts = contacts;
         _conversations = conversations;
     }
+
+    public async Task<Guid> GetIdAsync() => await Task.FromResult(this.GetGrainId().GetGuidKey());
+    public async Task<Media?> GetAvatarAsync() => await Task.FromResult(_profile.State.ProfilePicture);
 
     public async Task<Options> GetOptionsAsync() => await Task.FromResult(_options.State);
     public async Task<Profile> GetProfileAsync() => await Task.FromResult(_profile.State);

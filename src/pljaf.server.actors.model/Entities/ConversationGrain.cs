@@ -5,8 +5,6 @@ namespace pljaf.server.model;
 
 public class ConversationGrain : Grain, IConversationGrain
 {
-    public Guid Id => this.GetGrainId().GetGuidKey();
-
     private readonly IPersistentState<string?> _name;
     private readonly IPersistentState<string?> _topic;
     private readonly IPersistentState<List<IUserGrain>> _members;
@@ -27,6 +25,7 @@ public class ConversationGrain : Grain, IConversationGrain
         _communications = communications;
     }
 
+    public async Task<Guid> GetIdAsync() => await Task.FromResult(this.GetGrainId().GetGuidKey());
     public async Task<string> GetNameAsync() => await Task.FromResult(_name.State ?? "");
     public async Task<string> GetTopicAsync() => await Task.FromResult(_topic.State ?? "");
 
@@ -61,12 +60,12 @@ public class ConversationGrain : Grain, IConversationGrain
     public async Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null)
     {
         var query =
-            _communications.State
-            .Where(message => datetimeFrom == null || (message.Timestamp > datetimeFrom))
-            .Where(message => datetimeTo == null || (message.Timestamp <= datetimeTo))
-            .ToList();
+            _communications.State.ToAsyncEnumerable()
+            .WhereAwait(async message => datetimeFrom == null || (await message.GetTimestampAsync() > datetimeFrom))
+            .WhereAwait(async message => datetimeTo == null || (await message.GetTimestampAsync() <= datetimeTo))
+            .ToListAsync();
 
-        return await Task.FromResult(query);
+        return await query;
     }
 
     public async Task<int> GetMessageCountAsync() => await Task.FromResult(_communications.State.Count);
