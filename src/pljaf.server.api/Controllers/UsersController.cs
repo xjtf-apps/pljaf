@@ -42,10 +42,13 @@ public class UsersController : ControllerBase
                 if (check.Status == "approved")
                 {
                     var userGrain = _grainFactory.GetGrain<IUserGrain>(phone)!;
-                    var userProfile = await userGrain.GetProfileAsync()!;
+                    var tokens = new Tokens() { AccessToken = "kisikisi" };
+                    await userGrain.SetTokensAsync(tokens);
 
                     // NOTE: should use client model here!
-                    return new JsonResult(userProfile);
+                    // TODO: should return JWT access and refresh token
+
+                    return new JsonResult(tokens);
                 }
             }
             ClearVerificationClient();

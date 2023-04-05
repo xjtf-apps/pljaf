@@ -17,5 +17,8 @@ public interface IUserGrain : IGrainWithStringKey
     Task AddContactAsync(IUserGrain contact);
     Task RemoveContactAsync(IUserGrain contact);
 
+    Task<Tokens> GetTokensAsync();
+    Task SetTokensAsync(Tokens tokens);
+
     Task<List<IConversationGrain>> GetConversationsAsync();
 }

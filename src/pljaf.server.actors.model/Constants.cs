@@ -8,6 +8,7 @@ public static class Constants
         {
             public const string Options = "v1/user/options";
             public const string Profile = "v1/user/profile";
+            public const string Tokens = "v1/user/tokens";
             public const string Contacts = "v1/user/contacts";
             public const string Conversations = "v1/user/conversations";
         }
