@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.actors.app", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.actors.model", "src\pljaf.server.actors.model\pljaf.server.actors.model.csproj", "{10B9D8F1-BB21-4337-B783-D86F8E35E273}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pljaf.server.api", "src\pljaf.server.api\pljaf.server.api.csproj", "{FB55194A-884E-453B-91C7-773B5C0BFC6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB55194A-884E-453B-91C7-773B5C0BFC6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB55194A-884E-453B-91C7-773B5C0BFC6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB55194A-884E-453B-91C7-773B5C0BFC6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB55194A-884E-453B-91C7-773B5C0BFC6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +57,7 @@ Global
 		{902B0CEE-63C8-4624-B59B-7F071194F8A0} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{76457788-7993-4C49-AF4F-9B8C6A4B87B1} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
+		{FB55194A-884E-453B-91C7-773B5C0BFC6F} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8F811DB3-DB0E-4BE1-A30F-BC58FEAF1186}
