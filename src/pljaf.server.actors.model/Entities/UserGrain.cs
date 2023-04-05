@@ -22,7 +22,7 @@ public class UserGrain : Grain, IUserGrain
         _conversations = conversations;
     }
 
-    public async Task<Guid> GetIdAsync() => await Task.FromResult(this.GetGrainId().GetGuidKey());
+    public async Task<string> GetIdAsync() => await Task.FromResult(this.GetPrimaryKeyString());
     public async Task<Media?> GetAvatarAsync() => await Task.FromResult(_profile.State.ProfilePicture);
 
     public async Task<Options> GetOptionsAsync() => await Task.FromResult(_options.State);

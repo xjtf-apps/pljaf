@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
-using pljaf.server.model;
-
 using Twilio;
+using pljaf.server.model;
+using Microsoft.AspNetCore.Mvc;
 using Twilio.Rest.Verify.V2.Service;
 
 namespace pljaf.server.api.Controllers;
@@ -19,55 +18,57 @@ public class UsersController : ControllerBase
         _twillioSettings = twillioSettings;
     }
 
-    public static readonly Dictionary<string, Guid> _registeredUsers = new();
-    public static readonly Dictionary<string, Guid> _registeringUsers = new();
-
     [HttpGet]
-    [Route("/register/{phone}")]
-    public async Task<IActionResult> StartRegistrationProcess(string phone)
+    [Route("/phone-verification/{phone}")]
+    [Route("/phone-verification/{phone}/{code?}")]
+    public async Task<IActionResult> VerificationProcess(string phone, string? code = null)
     {
         if (IsValidPhoneNumber(phone))
         {
-            if (_registeredUsers.ContainsKey(phone))
-            {
-                // redirect to 2FA for new devices of already registered users
-                throw new NotImplementedException();
-            }
-            else
-            {
-                var userId = Guid.NewGuid();
-                _registeringUsers[phone] = userId;
+            InitVerificationClient();
 
-                TwilioClient.Init(_twillioSettings.AccountSid, _twillioSettings.AccountSid);
-
+            if (code == null)
+            {
                 var verification = await VerificationResource.CreateAsync
                     (to: phone, channel: "sms", pathServiceSid: _twillioSettings.ServiceSid);
 
                 return new JsonResult(verification.Status);
             }
+            else
+            {
+                var check = await VerificationCheckResource.CreateAsync
+                    (to: phone, code: code.ToString(), pathServiceSid: _twillioSettings.ServiceSid);
+
+                if (check.Status == "approved")
+                {
+                    var userGrain = _grainFactory.GetGrain<IUserGrain>(phone)!;
+                    var userProfile = await userGrain.GetProfileAsync()!;
+
+                    // NOTE: should use client model here!
+                    return new JsonResult(userProfile);
+                }
+            }
+            ClearVerificationClient();
         }
-        else return BadRequest();
+        return BadRequest();
     }
 
-    private bool IsValidPhoneNumber(string phone)
+    private void InitVerificationClient()
+    {
+        TwilioClient.Init(_twillioSettings.AccountSid, _twillioSettings.AuthToken);
+    }
+
+    private static void ClearVerificationClient()
+    {
+        TwilioClient.Invalidate();
+    }
+
+    private static bool IsValidPhoneNumber(string phone)
     {
         if (phone == null) return false;
         if (phone.StartsWith("+") &&
-            phone.Skip(1).All(c => char.IsDigit(c))) return true;
+            phone.Skip(1).All(char.IsDigit)) return true;
 
         return false;
     }
-
-    //[HttpGet]
-    //[Route("/{phone}")]
-    //public async Task<IActionResult> GetUserAsync(string phone)
-    //{
-    //    if (_registeredUsers.TryGetValue(phone, out var userId))
-    //    {
-    //        var userGrain = _grainFactory.GetGrain<IUserGrain>(userId)!;
-    //        var userProfile = await userGrain.GetProfileAsync();
-    //        return new JsonResult(userProfile);
-    //    }
-    //    return NoContent();
-    //}
 }

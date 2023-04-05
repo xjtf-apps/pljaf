@@ -2,9 +2,9 @@
 
 namespace pljaf.server.model;
 
-public interface IUserGrain : IGrainWithGuidKey
+public interface IUserGrain : IGrainWithStringKey
 {
-    Task<Guid> GetIdAsync();
+    Task<string> GetIdAsync();
     Task<Media?> GetAvatarAsync();
 
     Task<Options> GetOptionsAsync();
