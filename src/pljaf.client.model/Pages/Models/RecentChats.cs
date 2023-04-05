@@ -5,5 +5,5 @@ namespace pljaf.client.model;
 
 public partial class RecentChats : ObservableObject
 {
-    [ObservableProperty] private ObservableCollection<RecentChatItem>? _recentChats;
+    [ObservableProperty] private ObservableCollection<RecentChatItem>? _recentChatItems;
 }
