@@ -12,8 +12,10 @@ public interface IConversationGrain : IGrainWithGuidKey
     Task SetNameAsync(string name);
     Task SetTopicAsync(string topic);
     Task<int> GetMessageCountAsync();
+    Task<bool> CheckIsGroupConversationAsync();
 
     Task<List<IUserGrain>> GetMembersAsync();
+    Task<List<IUserGrain>> GetInvitedMembersAsync();
     Task LeaveConversationAsync(IUserGrain leavingUser);
     Task InviteToConversationAsync(Invitation invitation);
     Task ResolveInvitationAsync(Invitation invitation, bool accepted);

@@ -34,8 +34,10 @@ public class ConversationGrain : Grain, IConversationGrain
     public async Task SetTopicAsync(string topic) => await _topic.SetValueAndPersistAsync(topic);
 
     public async Task<List<IUserGrain>> GetMembersAsync() => await Task.FromResult(_members.State);
+    public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_members.State.Count() > 2);
     public async Task LeaveConversationAsync(IUserGrain leavingUser) => await _members.RemoveItemAndPersistAsync(leavingUser);
     public async Task InviteToConversationAsync(Invitation invitation) => await _invitations.AddItemAndPersistAsync(invitation);
+    public async Task<List<IUserGrain>> GetInvitedMembersAsync() => await Task.FromResult(_invitations.State.Select(inv => inv.Invited).Distinct().ToList());
     public async Task ResolveInvitationAsync(Invitation invitation, bool accepted)
     {
         await _invitations.RemoveItemAndPersistAsync(invitation);

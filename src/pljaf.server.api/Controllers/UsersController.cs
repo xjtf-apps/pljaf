@@ -16,12 +16,12 @@ public class UsersController : ControllerBase
 {
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtTokenService;
-    private readonly TwillioUserVerificationSettings _twillioSettings;
+    private readonly TwillioSettingsService _twillioSettings;
 
     public UsersController(
         IGrainFactory grainFactory,
         JwtTokenService jwtTokenService,
-        TwillioUserVerificationSettings twillioSettings)
+        TwillioSettingsService twillioSettings)
     {
         _grainFactory = grainFactory;
         _jwtTokenService = jwtTokenService;
