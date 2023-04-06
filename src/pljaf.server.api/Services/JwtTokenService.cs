@@ -9,12 +9,12 @@ namespace pljaf.server.api;
 
 public class JwtTokenService
 {
-    private readonly JwtAuthenticationSettings _jwtSettings;
+    private readonly JwtSettingsService _jwtSettings;
     private SymmetricSecurityKey SecurityKey => new(SecretBytes);
     private byte[] SecretBytes => Encoding.UTF8.GetBytes(_jwtSettings.Secret);
     private SigningCredentials SigningCredentials => new(SecurityKey, SecurityAlgorithms.HmacSha256);
 
-    public JwtTokenService(JwtAuthenticationSettings jwtSettings)
+    public JwtTokenService(JwtSettingsService jwtSettings)
     {
         _jwtSettings = jwtSettings;
     }
@@ -61,5 +61,36 @@ public class JwtTokenService
             throw new SecurityTokenException("Invalid token");
 
         return principal;
+    }
+
+    public string? GetUserIdFromRequest(HttpContext context)
+    {
+        var authHeader = context.Request.Headers.Authorization;
+        var bearerToken = authHeader.FirstOrDefault();
+        var jwtToken = bearerToken?.Replace("Bearer ", "");
+
+        return GetUserIdFromToken(jwtToken);
+    }
+
+    private string? GetUserIdFromToken(string? token)
+    {
+        if (token == null) return null;
+
+        var parameters = new TokenValidationParameters()
+        {
+            ValidateAudience = false,
+            ValidateIssuer = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = SecurityKey,
+            ValidateLifetime = true
+        };
+
+        var handler = new JwtSecurityTokenHandler();
+        var principal = handler.ValidateToken(token, parameters, out SecurityToken securityToken);
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            throw new SecurityTokenException("Invalid token");
+
+        return principal?.Identity?.Name;
     }
 }

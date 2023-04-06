@@ -1,6 +1,6 @@
 ﻿namespace pljaf.server.api;
 
-public class JwtAuthenticationSettings
+public class JwtSettingsService
 {
     private readonly JwtSettings _jwtSettings;
     public string Secret => _jwtSettings.Secret;
@@ -9,7 +9,7 @@ public class JwtAuthenticationSettings
     public int TokenValidityInMinutes => _jwtSettings.TokenValidityInMinutes;
     public int RefreshTokenValidityInDays => _jwtSettings.RefreshTokenValidityInDays;
 
-    public JwtAuthenticationSettings(IConfiguration config)
+    public JwtSettingsService(IConfiguration config)
     {
         var configSection = config.GetSection("Jwt")!;
         var jwtSection = configSection.Get<JwtSettings>()!;

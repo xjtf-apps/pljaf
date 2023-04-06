@@ -1,6 +1,6 @@
 ﻿namespace pljaf.server.api;
 
-public class TwillioUserVerificationSettings
+public class TwillioSettingsService
 {
     public string AuthToken => _config.AuthToken;
     public string AccountSid => _config.AccountSid;
@@ -8,7 +8,7 @@ public class TwillioUserVerificationSettings
 
     private readonly VerificationSettings.TwillioSettings _config;
 
-    public TwillioUserVerificationSettings(IConfiguration config)
+    public TwillioSettingsService(IConfiguration config)
     {
         var configSection = config.GetRequiredSection("Verification");
         var verificationConfig = configSection.Get<VerificationSettings>()!;
