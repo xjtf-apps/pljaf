@@ -13,8 +13,8 @@ public class MessageGrain : Grain, IMessageGrain
     public MessageGrain(
         [PersistentState(Constants.StoreKeys.Message.Sender)] IPersistentState<IUserGrain> sender,
         [PersistentState(Constants.StoreKeys.Message.Timestamp)] IPersistentState<DateTime> timestamp,
-        [PersistentState(Constants.StoreKeys.Message.MediaReference)]IPersistentState<Media?> mediaReference,
-        [PersistentState(Constants.StoreKeys.Message.EncryptedTextData)] IPersistentState<byte[]> encryptedTextData)
+        [PersistentState(Constants.StoreKeys.Message.EncryptedTextData)] IPersistentState<byte[]> encryptedTextData,
+        [PersistentState(Constants.StoreKeys.Message.MediaReference, Constants.Stores.MediaStore)]IPersistentState<Media?> mediaReference)
     {
         _sender = sender;
         _timestamp = timestamp;

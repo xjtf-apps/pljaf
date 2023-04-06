@@ -16,5 +16,6 @@ public class ActorSystemSettings
     {
         public required string MembershipTable { get; set; }
         public required string ActorPersistance { get; set; }
+        public required string BinaryDataStorage { get; set; }
     }
 }

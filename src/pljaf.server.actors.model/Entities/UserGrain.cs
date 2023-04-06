@@ -14,8 +14,8 @@ public class UserGrain : Grain, IUserGrain
     public UserGrain(
         [PersistentState(Constants.StoreKeys.User.Tokens)] IPersistentState<Tokens> tokens,
         [PersistentState(Constants.StoreKeys.User.Options)] IPersistentState<Options> options,
-        [PersistentState(Constants.StoreKeys.User.Profile)] IPersistentState<Profile> profile,
         [PersistentState(Constants.StoreKeys.User.Contacts)] IPersistentState<List<IUserGrain>> contacts,
+        [PersistentState(Constants.StoreKeys.User.Profile, Constants.Stores.MediaStore)] IPersistentState<Profile> profile,
         [PersistentState(Constants.StoreKeys.User.Conversations)] IPersistentState<List<IConversationGrain>> conversations)
     {
         _tokens = tokens;

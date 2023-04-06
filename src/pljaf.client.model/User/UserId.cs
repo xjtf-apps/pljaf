@@ -1,3 +1,3 @@
 ﻿namespace pljaf.client.model;
 
-public record class UserId(Guid Value);
+public record class UserId(string phoneNumber);

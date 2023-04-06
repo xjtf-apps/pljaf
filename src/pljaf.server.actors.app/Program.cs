@@ -1,5 +1,6 @@
 using Orleans.Configuration;
 using pljaf.server.actors.app;
+using pljaf.server.model;
 
 await Host
     .CreateDefaultBuilder(args)
@@ -19,5 +20,6 @@ await Host
         builder.ConfigureLogging(builder => builder.SetMinimumLevel(LogLevel.Information).AddConsole());
         builder.UseAzureStorageClustering(options => options.ConfigureTableServiceClient(connectionStrings.MembershipTable));
         builder.AddAzureTableGrainStorageAsDefault(options => options.ConfigureTableServiceClient(connectionStrings.ActorPersistance));
+        builder.AddAzureBlobGrainStorage(Constants.Stores.MediaStore, options => options.ConfigureBlobServiceClient(connectionStrings.BinaryDataStorage));
     })
     .RunConsoleAsync();

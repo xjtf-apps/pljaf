@@ -2,6 +2,11 @@
 
 public static class Constants
 {
+    public static class Stores
+    {
+        public const string MediaStore = "v1/store/media";
+    }
+
     public static class StoreKeys
     {
         public static class User
