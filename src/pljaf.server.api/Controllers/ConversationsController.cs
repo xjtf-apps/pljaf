@@ -93,7 +93,20 @@ namespace pljaf.server.api.Controllers
         [Route("/conversations/{convId}/name/{name}")]
         public async Task<IActionResult> SetConversationName(string convId, string name)
         {
-            throw new NotImplementedException();
+            var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+            var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+            var id = Guid.Parse(convId);
+
+            var conversation = await
+                (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+                .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
+                .FirstOrDefaultAsync();
+
+            if (conversation == null) return BadRequest("No such conversation found");
+            if (name == null) return BadRequest("Name cannot be null");
+            await conversation.SetNameAsync(name);
+
+            return Ok();
         }
 
         [HttpPut]
@@ -101,7 +114,20 @@ namespace pljaf.server.api.Controllers
         [Route("/conversations/{convId}/topic/{topic}")]
         public async Task<IActionResult> SetConversationTopic(string convId, string topic)
         {
-            throw new NotImplementedException();
+            var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+            var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+            var id = Guid.Parse(convId);
+
+            var conversation = await
+                (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+                .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
+                .FirstOrDefaultAsync();
+
+            if (conversation == null) return BadRequest("No such conversation found");
+            if (topic == null) return BadRequest("Topic cannot be null");
+            await conversation.SetTopicAsync(topic);
+
+            return Ok();
         }
 
         [HttpPut]
@@ -109,7 +135,35 @@ namespace pljaf.server.api.Controllers
         [Route("/conversations/{convId}/invite/{userId}")]
         public async Task<IActionResult> InviteToConversation(string convId, string userId)
         {
-            throw new NotImplementedException();
+            var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+            var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+            var targetUser = _grainFactory.GetGrain<IUserGrain>(userId)!;
+            var targetUserId = await targetUser.GetIdAsync()!;
+            var id = Guid.Parse(convId);
+
+            var conversation = await
+                (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+                .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
+                .FirstOrDefaultAsync();
+            if (conversation == null) return BadRequest("No such conversation found");
+
+            var currentMembers = await conversation.GetMembersAsync();
+            var currentInvites = await conversation.GetInvitedMembersAsync();
+            var current = currentMembers.Concat(currentInvites);
+
+            var query = await current.ToAsyncEnumerable()
+                .WhereAwait(async m => (await m.GetIdAsync()) == targetUserId)
+                .CountAsync();
+            if (query != 0) return BadRequest("User already a member or invited to conversation");
+
+            await conversation.InviteToConversationAsync(new Invitation()
+            {
+                Inviter = currentUser,
+                Invited = targetUser,
+                Timestamp = DateTime.UtcNow
+            });
+
+            return Ok();
         }
 
         [HttpPut]
@@ -117,7 +171,22 @@ namespace pljaf.server.api.Controllers
         [Route("/conversations/{convId}/invite/resolve/{decision}")]
         public async Task<IActionResult> ResolveInvitation(string convId, bool decision)
         {
-            throw new NotImplementedException();
+            var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+            var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+            var id = Guid.Parse(convId);
+
+            var conversation = await
+                (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+                .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
+                .FirstOrDefaultAsync();
+
+            if (conversation == null) return BadRequest("No such conversation found");
+
+            var invitation = await conversation.GetInvitationAsync(currentUser);
+            if (invitation == null) return BadRequest("No such invitation found");
+            await conversation.ResolveInvitationAsync(invitation, decision);
+
+            return Ok();
         }
 
         [Authorize]
@@ -125,7 +194,18 @@ namespace pljaf.server.api.Controllers
         [Route("/conversations/{convId}/leave")]
         public async Task<IActionResult> LeaveConversation(string convId)
         {
-            throw new NotImplementedException();
+            var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+            var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+            var id = Guid.Parse(convId);
+
+            var conversation = await
+                (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+                .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
+                .FirstOrDefaultAsync();
+
+            if (conversation == null) return BadRequest("No such conversation found");
+            await conversation.LeaveConversationAsync(currentUser);
+            return NoContent();
         }
 
         [HttpPost]

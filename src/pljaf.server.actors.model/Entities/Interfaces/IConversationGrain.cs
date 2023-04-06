@@ -18,6 +18,7 @@ public interface IConversationGrain : IGrainWithGuidKey
     Task<List<IUserGrain>> GetInvitedMembersAsync();
     Task LeaveConversationAsync(IUserGrain leavingUser);
     Task InviteToConversationAsync(Invitation invitation);
+    Task<Invitation?> GetInvitationAsync(IUserGrain invitedUser);
     Task ResolveInvitationAsync(Invitation invitation, bool accepted);
 
     Task InitializeNewConversationAsync(IUserGrain initiator, IUserGrain contact, IMessageGrain firstMessage);
