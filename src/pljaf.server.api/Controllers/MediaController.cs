@@ -31,21 +31,13 @@ public class MediaController : ControllerBase
     public async Task<IActionResult> AttachImageMediaToMessage([FromBody] IFormFile imageMedia, [FromRoute] Guid msgId, [FromRoute] Guid convId)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
-        var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
         var conversation = _grainFactory.GetGrain<IConversationGrain>(convId)!;
         var message = _grainFactory.GetGrain<IMessageGrain>(msgId)!;
 
-        var messageInConversation = await
-            (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == msgId)
-            .FirstOrDefaultAsync() != null;
+        bool messageFound = await FindMessage(msgId, conversation);
+        bool memberFound = await FindMember(currentUserId, conversation);
 
-        var userInConversation = await
-            (await conversation.GetMembersAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == currentUserId)
-            .FirstOrDefaultAsync() != null;
-
-        if (userInConversation && messageInConversation)
+        if (memberFound && messageFound)
         {
             var mediaStoreId = Guid.NewGuid();
             var maxSize = _mediaSettingsService.MaxImageSize;
@@ -74,25 +66,17 @@ public class MediaController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    [Route("media/attach/video/{msgId}")]
+    [Route("/media/attach/video/{msgId}/{convId}")]
     public async Task<IActionResult> AttachVideoMediaToMessage([FromBody] IFormFile videoMedia, [FromRoute] Guid msgId, [FromRoute] Guid convId)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
-        var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
         var conversation = _grainFactory.GetGrain<IConversationGrain>(convId)!;
         var message = _grainFactory.GetGrain<IMessageGrain>(msgId)!;
 
-        var messageInConversation = await
-            (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == msgId)
-            .FirstOrDefaultAsync() != null;
+        bool messageFound = await FindMessage(msgId, conversation);
+        bool memberFound = await FindMember(currentUserId, conversation);
 
-        var userInConversation = await
-            (await conversation.GetMembersAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == currentUserId)
-            .FirstOrDefaultAsync() != null;
-
-        if (userInConversation && messageInConversation)
+        if (memberFound && messageFound)
         {
             var mediaStoreId = Guid.NewGuid();
             var maxSize = _mediaSettingsService.MaxVideoSize;
@@ -121,25 +105,17 @@ public class MediaController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    [Route("/media/attach/audio/{msgId}")]
+    [Route("/media/attach/audio/{msgId}/{convId}")]
     public async Task<IActionResult> AttachAudioMediaToMessage([FromBody] IFormFile audioMedia, [FromRoute] Guid msgId, [FromRoute] Guid convId)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
-        var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
         var conversation = _grainFactory.GetGrain<IConversationGrain>(convId)!;
         var message = _grainFactory.GetGrain<IMessageGrain>(msgId)!;
 
-        var messageInConversation = await
-            (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == msgId)
-            .FirstOrDefaultAsync() != null;
+        bool messageFound = await FindMessage(msgId, conversation);
+        bool memberFound = await FindMember(currentUserId, conversation);
 
-        var userInConversation = await
-            (await conversation.GetMembersAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == currentUserId)
-            .FirstOrDefaultAsync() != null;
-
-        if (userInConversation && messageInConversation)
+        if (memberFound && messageFound)
         {
             var mediaStoreId = Guid.NewGuid();
             var maxSize = _mediaSettingsService.MaxAudioSize;
@@ -164,5 +140,21 @@ public class MediaController : ControllerBase
             });
         }
         else return BadRequest("User or message not in conversation");
+    }
+
+    private static async Task<bool> FindMember(string currentUserId, IConversationGrain conversation)
+    {
+        return await
+            (await conversation.GetMembersAsync()).ToAsyncEnumerable()
+            .WhereAwait(async m => (await m.GetIdAsync()) == currentUserId)
+            .FirstOrDefaultAsync() != null;
+    }
+
+    private static async Task<bool> FindMessage(Guid msgId, IConversationGrain conversation)
+    {
+        return await
+            (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
+            .WhereAwait(async m => (await m.GetIdAsync()) == msgId)
+            .FirstOrDefaultAsync() != null;
     }
 }
