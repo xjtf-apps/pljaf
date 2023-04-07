@@ -27,7 +27,7 @@ public class ProfileController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    [Route("/user")]
+    [Route("/user/profile")]
     public async Task<IActionResult> GetUserProfile(string phoneNumber)
     {
         var contact = _grainFactory.GetGrain<IUserGrain>(phoneNumber);
@@ -47,7 +47,7 @@ public class ProfileController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    [Route("/user")]
+    [Route("/user/profile")]
     public async Task<IActionResult> SetUserProfile([FromBody]User model)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext);
@@ -64,7 +64,7 @@ public class ProfileController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    [Route("/picture")]
+    [Route("/user/profile/picture")]
     public async Task<IActionResult> SetUserProfilePicture(IFormFile file)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext);
@@ -94,7 +94,7 @@ public class ProfileController : ControllerBase
 
     [Authorize]
     [HttpDelete]
-    [Route("/picture")]
+    [Route("/user/profile/picture")]
     public async Task<IActionResult> ClearUserProfilePicture()
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext);

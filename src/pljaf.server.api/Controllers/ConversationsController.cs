@@ -241,7 +241,11 @@ public class ConversationsController : ControllerBase
         if (model.Topic is { })
             await conversation.SetTopicAsync(model.Topic!);
 
-        return Ok(new ConvId(convId));
+        return Ok(new
+        {
+            ConvId = new ConvId(convId),
+            MessageId = new MsgId(await message.GetIdAsync())
+        });
     }
 }
 
@@ -251,5 +255,4 @@ public class ConversationRequest
     public string? Topic { get; set; }
     public required List<string> RequestedMembers { get; set; }
     public required byte[] EncryptedTextData { get; set; }
-    public IFormFile? MediaData { get; set; }
 }
