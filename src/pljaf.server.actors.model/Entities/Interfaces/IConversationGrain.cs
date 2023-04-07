@@ -25,4 +25,17 @@ public interface IConversationGrain : IGrainWithGuidKey
     Task InitializeNewGroupConversationAsync(IUserGrain initiator, List<IUserGrain> contacts, IMessageGrain firstMessage);
 
     Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null);
+
+    #region observers
+    Task Subscribe(IConvNameChangedObserver nameChangedObserver);
+    Task Subscribe(IConvTopicChangedObserver topicChangedObserver);
+    Task Subscribe(IConvMembersChangedObserver membersChangedObserver);
+    Task Subscribe(IConvInvitesChangedObserver invitesChangedObserver);
+    Task Subscribe(IConvCommunicationChangedObserver communicationChangedObserver);
+    Task Unsubscribe(IConvNameChangedObserver nameChangedObserver);
+    Task Unsubscribe(IConvTopicChangedObserver topicChangedObserver);
+    Task Unsubscribe(IConvMembersChangedObserver membersChangedObserver);
+    Task Unsubscribe(IConvInvitesChangedObserver invitesChangedObserver);
+    Task Unsubscribe(IConvCommunicationChangedObserver communicationChangedObserver);
+    #endregion
 }
