@@ -15,9 +15,9 @@ public interface IMessageGrain : IGrainWithGuidKey
     Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData);
 
     #region observers
-    Task Subscribe(IMediaAttachedObserver mediaAttachedObserver);
+    Task Subscribe(IMessageMediaAttachedObserver mediaAttachedObserver);
     Task Subscribe(IMessageAuthoredObserver messageAuthoredObserver);
-    Task Unsubscribe(IMediaAttachedObserver mediaAttachedObserver);
+    Task Unsubscribe(IMessageMediaAttachedObserver mediaAttachedObserver);
     Task Unsubscribe(IMessageAuthoredObserver messageAuthoredObserver);
     #endregion
 }

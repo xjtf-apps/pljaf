@@ -12,7 +12,7 @@ public class MessageGrain : Grain, IMessageGrain
     private readonly IPersistentState<Media?> _mediaReference;
     private readonly IPersistentState<byte[]> _encryptedTextData;
 
-    private readonly ObserverManager<IMediaAttachedObserver> _mediaAttachedManager;
+    private readonly ObserverManager<IMessageMediaAttachedObserver> _mediaAttachedManager;
     private readonly ObserverManager<IMessageAuthoredObserver> _messageAuthoredManager;
 
     public MessageGrain(
@@ -28,7 +28,7 @@ public class MessageGrain : Grain, IMessageGrain
         _encryptedTextData = encryptedTextData;
 
         var observerTimespan = TimeSpan.FromMinutes(5);
-        _mediaAttachedManager = new ObserverManager<IMediaAttachedObserver>(observerTimespan, logger);
+        _mediaAttachedManager = new ObserverManager<IMessageMediaAttachedObserver>(observerTimespan, logger);
         _messageAuthoredManager = new ObserverManager<IMessageAuthoredObserver>(observerTimespan, logger);
     }
 
@@ -53,7 +53,7 @@ public class MessageGrain : Grain, IMessageGrain
     }
 
     #region observers
-    public Task Subscribe(IMediaAttachedObserver mediaAttachedObserver)
+    public Task Subscribe(IMessageMediaAttachedObserver mediaAttachedObserver)
     {
         _mediaAttachedManager.Subscribe(mediaAttachedObserver, mediaAttachedObserver);
         return Task.CompletedTask;
@@ -65,7 +65,7 @@ public class MessageGrain : Grain, IMessageGrain
         return Task.CompletedTask;
     }
 
-    public Task Unsubscribe(IMediaAttachedObserver mediaAttachedObserver)
+    public Task Unsubscribe(IMessageMediaAttachedObserver mediaAttachedObserver)
     {
         _mediaAttachedManager.Unsubscribe(mediaAttachedObserver);
         return Task.CompletedTask;

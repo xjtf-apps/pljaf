@@ -1,6 +1,6 @@
 ﻿namespace pljaf.server.model;
 
-public interface IMediaAttachedObserver : IGrainObserver
+public interface IMessageMediaAttachedObserver : IGrainObserver
 {
     Task DownloadAttachedMedia(Media? mediaRef);
 }
