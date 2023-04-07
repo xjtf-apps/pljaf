@@ -8,6 +8,7 @@ public interface IMessageGrain : IGrainWithGuidKey
     Task<IUserGrain> GetSenderAsync();
     Task<DateTime> GetTimestampAsync();
 
+    Task SetMediaReferenceAsync(Media? media);
     Task<Media?> GetMediaReferenceAsync();
     Task<byte[]> GetEncryptedTextDataAsync();
 

@@ -28,6 +28,11 @@ public class MessageGrain : Grain, IMessageGrain
     public async Task<Media?> GetMediaReferenceAsync() => await Task.FromResult(_mediaReference.State);
     public async Task<byte[]> GetEncryptedTextDataAsync() => await Task.FromResult(_encryptedTextData.State);
 
+    public async Task SetMediaReferenceAsync(Media? mediaReference)
+    {
+        _mediaReference.State = mediaReference; await _mediaReference.WriteStateAsync();
+    }
+
     public async Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData, Media? mediaReference = null)
     {
         _sender.State = sender; await _sender.WriteStateAsync();
