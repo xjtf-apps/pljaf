@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 
 using pljaf.server.model;
 using pljaf.client.model;
+using System.Runtime.InteropServices;
 
 namespace pljaf.server.api.Controllers;
 
@@ -86,6 +87,74 @@ public class ConversationsController : ControllerBase
             };
         })
         .ToArrayAsync());
+    }
+
+    [HttpPost]
+    [Authorize]
+    [Route("/conversations/{convId}/message/new")]
+    public async Task<IActionResult> PostMessage([FromBody] MessageRequest model, [FromRoute] string convId)
+    {
+        var msgId = Guid.NewGuid();
+        var conversationId = Guid.Parse(convId);
+        var message = _grainFactory.GetGrain<IMessageGrain>(msgId);
+        var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+        var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+
+        var conversation = await
+            (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+            .WhereAwait(async conv => (await conv.GetIdAsync()) == conversationId)
+            .FirstOrDefaultAsync();
+
+        if (conversation == null) return BadRequest("No such conversation found");
+        await message.AuthorMessageAsync(currentUser, DateTime.UtcNow, model.EncryptedTextData);
+        await conversation.PostMessageAsync(message);
+
+        return Ok(new
+        {
+            ConvId = new ConvId(conversationId),
+            MsgId = new MsgId(msgId)
+        });
+    }
+
+    [HttpGet]
+    [Authorize]
+    [Route("/conversation/{convId}/messages")]
+    [Route("/conversation/{convId}/messages/last/{n}")]
+    [Route("/conversation/{convId}/messages/from/{from}/to/{to}")]
+    public async Task<IActionResult> GetMessages(string convId, DateTime? from = null, DateTime? to = null, int? n = null)
+    {
+        var conversationId = Guid.Parse(convId);
+        var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
+        var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+
+        var conversation = await
+            (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
+            .WhereAwait(async conv => (await conv.GetIdAsync()) == conversationId)
+            .FirstOrDefaultAsync();
+
+        if (conversation == null) return BadRequest("No such conversation found");
+        if (n == null) n = await conversation.GetMessageCountAsync();
+        var messages = await (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
+            .WhereAwait(async m => from == null || (await m.GetTimestampAsync()) > from)
+            .WhereAwait(async m => to == null || (await m.GetTimestampAsync()) < to)
+            .TakeLast((int)n).ToListAsync();
+
+        return Ok(new
+        {
+            ConvId = new ConvId(conversationId),
+            Messages = messages.ToAsyncEnumerable().SelectAwait(async msg =>
+            {
+                var mediaRef = await msg.GetMediaReferenceAsync();
+
+                return new
+                {
+                    Timestamp = await msg.GetTimestampAsync(),
+                    EncryptedTextData = await msg.GetEncryptedTextDataAsync(),
+                    Sender = new UserId(await (await msg.GetSenderAsync()).GetIdAsync()),
+                    MediaRef = mediaRef != null ? new AnyMediaReference { StoreId =  mediaRef.StoreId } : null,
+                };
+            })
+        });
     }
 
     [HttpPut]
@@ -220,7 +289,7 @@ public class ConversationsController : ControllerBase
         // author message, TODO: support attached media
         var message = _grainFactory.GetGrain<IMessageGrain>(Guid.NewGuid());
         await message.AuthorMessageAsync
-            (currentUser, DateTime.UtcNow, model.EncryptedTextData, mediaReference: null);
+            (currentUser, DateTime.UtcNow, model.EncryptedTextData);
 
         var members = model.RequestedMembers.Select(m =>
         {
@@ -254,5 +323,10 @@ public class ConversationRequest
     public string? Name { get; set; }
     public string? Topic { get; set; }
     public required List<string> RequestedMembers { get; set; }
+    public required byte[] EncryptedTextData { get; set; }
+}
+
+public class MessageRequest
+{
     public required byte[] EncryptedTextData { get; set; }
 }
