@@ -133,7 +133,8 @@ public class ConversationsController : ControllerBase
             .FirstOrDefaultAsync();
 
         if (conversation == null) return BadRequest("No such conversation found");
-        if (n == null) n = await conversation.GetMessageCountAsync();
+        n ??= await conversation.GetMessageCountAsync();
+
         var messages = await (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
             .WhereAwait(async m => from == null || (await m.GetTimestampAsync()) > from)
             .WhereAwait(async m => to == null || (await m.GetTimestampAsync()) < to)
@@ -142,7 +143,7 @@ public class ConversationsController : ControllerBase
         return Ok(new
         {
             ConvId = new ConvId(conversationId),
-            Messages = messages.ToAsyncEnumerable().SelectAwait(async msg =>
+            SelectedMessages = messages.ToAsyncEnumerable().SelectAwait(async msg =>
             {
                 var mediaRef = await msg.GetMediaReferenceAsync();
 
@@ -153,7 +154,11 @@ public class ConversationsController : ControllerBase
                     Sender = new UserId(await (await msg.GetSenderAsync()).GetIdAsync()),
                     MediaRef = mediaRef != null ? new AnyMediaReference { StoreId =  mediaRef.StoreId } : null,
                 };
-            })
+            }),
+            EarliestMessageTimestamp = await messages.ToAsyncEnumerable().MinAsync(async m => await m.GetTimestampAsync()),
+            LastestMessageTimestamp = await messages.ToAsyncEnumerable().MaxAsync(async m => await m.GetTimestampAsync()),
+            SelectedMessagesCount = messages.Count,
+            TotalMessageCount = await conversation.GetMessageCountAsync()
         });
     }
 
