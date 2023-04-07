@@ -33,11 +33,10 @@ public class MessageGrain : Grain, IMessageGrain
         _mediaReference.State = mediaReference; await _mediaReference.WriteStateAsync();
     }
 
-    public async Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData, Media? mediaReference = null)
+    public async Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData)
     {
         _sender.State = sender; await _sender.WriteStateAsync();
         _timestamp.State = timestamp; await _timestamp.WriteStateAsync();
-        _mediaReference.State = mediaReference; await _mediaReference.WriteStateAsync();
         _encryptedTextData.State = encryptedTextData; await _encryptedTextData.WriteStateAsync();
     }
 }

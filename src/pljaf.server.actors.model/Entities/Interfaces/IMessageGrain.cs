@@ -12,5 +12,5 @@ public interface IMessageGrain : IGrainWithGuidKey
     Task<Media?> GetMediaReferenceAsync();
     Task<byte[]> GetEncryptedTextDataAsync();
 
-    Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData, Media? mediaReference = null);
+    Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData);
 }
