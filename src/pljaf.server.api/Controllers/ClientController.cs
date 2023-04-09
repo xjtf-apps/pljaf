@@ -14,7 +14,7 @@ public class ClientController : ControllerBase
 {
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtService;
-    private readonly IForwardedClientObserver _clientObserver;
+    private readonly ICommunicationObserver _clientObserver;
     private readonly IHostApplicationLifetime _applicationLifetime;
 
     private string? CurrentUserId => _jwtService.GetUserIdFromRequest(HttpContext);
@@ -24,7 +24,7 @@ public class ClientController : ControllerBase
     public ClientController(
         IGrainFactory grainFactory,
         JwtTokenService jwtTokenService,
-        IForwardedClientObserver clientObserver,
+        ICommunicationObserver clientObserver,
         IHostApplicationLifetime applicationLifetime)
     {
         _grainFactory = grainFactory;
@@ -40,18 +40,19 @@ public class ClientController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
+            // TODO: rework
+
+
             var messages = new List<string>();
             var conversations = await CurrentUser.GetConversationsAsync()!;
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-            // subscribe to grains,
-            // emit messages to list above,
-            // the web socket task will consume the messages
+            var conversationObservers = conversations.Select(conv => new ConversationClient(conv));
 
             var webSocketTask = Task.Run(async () =>
             {
                 while (true)
                 {
+
                     await SendAsync(webSocket, messages);
                     await Task.Delay(1_000);
                 }

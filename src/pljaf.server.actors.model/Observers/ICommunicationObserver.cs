@@ -1,45 +1,16 @@
 ﻿namespace pljaf.server.model;
 
-public interface IForwardedClientObserver :
+public interface ICommunicationObserver :
     IConvNameChangedObserver,
     IConvTopicChangedObserver,
     IConvMembersChangedObserver,
     IConvInvitesChangedObserver,
-    IConvCommunicationChangedObserver,
-    IMessageMediaAttachedObserver,
-    IMessageAuthoredObserver
+    IConvCommunicationChangedObserver
 {
-    Task SubscribeToGrain(IGrainFactory grainFactory, IGrain grain)
-    {
-        if (grain is IMessageGrain message) return SubscribeToMessageGrain(grainFactory, message);
-        if (grain is IConversationGrain conversation) return SubscribeToConversationGrain(grainFactory, conversation);
-        throw new NotSupportedException(grain.GetType().Name);
-    }
+    event EventHandler<string>? OnChange;
 
-    Task UnsubscribeFromGrain(IGrainFactory grainFactory, IGrain grain)
-    {
-        if (grain is IMessageGrain message) return UnsubscribeFromMessageGrain(grainFactory, message);
-        if (grain is IConversationGrain conversation) return UnsubscribeFromConversationGrain(grainFactory, conversation);
-        throw new NotSupportedException(grain.GetType().Name);
-    }
-
-    Task SubscribeToMessageGrain(IGrainFactory grainFactory, IMessageGrain message)
-    {
-        var _thisMediaAttachedObserver = grainFactory.CreateObjectReference<IMessageMediaAttachedObserver>(this);
-        var _thisMessageAuthoredObserver = grainFactory.CreateObjectReference<IMessageAuthoredObserver>(this);
-        var t1 = message.Subscribe(_thisMediaAttachedObserver);
-        var t2 = message.Subscribe(_thisMessageAuthoredObserver);
-        return Task.WhenAll(t1, t2);
-    }
-
-    Task UnsubscribeFromMessageGrain(IGrainFactory grainFactory, IMessageGrain message)
-    {
-        var _thisMediaAttachedObserver = grainFactory.CreateObjectReference<IMessageMediaAttachedObserver>(this);
-        var _thisMessageAuthoredObserver = grainFactory.CreateObjectReference<IMessageAuthoredObserver>(this);
-        var t1 = message.Unsubscribe(_thisMediaAttachedObserver);
-        var t2 = message.Unsubscribe(_thisMessageAuthoredObserver);
-        return Task.WhenAll(t1, t2);
-    }
+    Task Subscribe(IGrainFactory grainFactory);
+    Task Unsubscribe(IGrainFactory grainFactory);
 
     Task SubscribeToConversationGrain(IGrainFactory grainFactory, IConversationGrain conversation)
     {
@@ -71,4 +42,3 @@ public interface IForwardedClientObserver :
         return Task.WhenAll(t1, t2, t3, t4, t5);
     }
 }
-
