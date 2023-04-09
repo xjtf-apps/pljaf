@@ -12,8 +12,8 @@ public class MessageGrain : Grain, IMessageGrain
     private readonly IPersistentState<Media?> _mediaReference;
     private readonly IPersistentState<byte[]> _encryptedTextData;
 
-    private readonly ObserverManager<IMessageMediaAttachedObserver> _mediaAttachedManager;
     private readonly ObserverManager<IMessageAuthoredObserver> _messageAuthoredManager;
+    private readonly ObserverManager<IMessageMediaAttachedObserver> _mediaAttachedManager;
 
     public MessageGrain(
         ILogger<MessageGrain> logger,
