@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-pljaf.server.actors.app-93b60250-59fa-4e17-97c0-8dc26249d5e1</UserSecretsId>
+    <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +14,7 @@
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="7.1.1" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="7.1.1" />
     <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.2" />
   </ItemGroup>
 
   <ItemGroup>

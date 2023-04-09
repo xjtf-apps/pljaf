@@ -2,10 +2,11 @@ using Orleans;
 using System.Text;
 using Orleans.Configuration;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using pljaf.server.api;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,7 @@ builder.Services.AddTransient<TwillioSettingsService>();
 builder.Services.AddTransient<MediaSettingsService>();
 builder.Services.AddTransient<JwtSettingsService>();
 builder.Services.AddTransient<JwtTokenService>();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -87,5 +89,7 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+//app.MapHub<ClientHub>("/client");
 app.MapControllers();
 app.Run();

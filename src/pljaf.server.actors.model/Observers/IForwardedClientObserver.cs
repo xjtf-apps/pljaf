@@ -1,6 +1,4 @@
-﻿using pljaf.server.model;
-
-namespace pljaf.server.actors.model;
+﻿namespace pljaf.server.model;
 
 public interface IForwardedClientObserver :
     IConvNameChangedObserver,

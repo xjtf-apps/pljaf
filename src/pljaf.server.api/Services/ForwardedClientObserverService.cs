@@ -1,10 +1,11 @@
-﻿using pljaf.server.actors.model;
-using pljaf.server.model;
+﻿using pljaf.server.model;
 
 namespace pljaf.server.api;
 
 public class ForwardedClientObserverService : IForwardedClientObserver
 {
+    public event EventHandler<string>? OnChangeObserved;
+
     public Task DownloadAttachedMedia(Media? mediaRef)
     {
         throw new NotImplementedException();
