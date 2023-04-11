@@ -6,8 +6,8 @@ public interface IMessageObserver :
 {
     event EventHandler<string>? OnChange;
 
-    Task Subscribe(IGrainFactory grainFactory);
-    Task Unsubscribe(IGrainFactory grainFactory);
+    Task SubscribeToGrain();
+    Task UnsubscribeFromGrain();
 
     Task SubscribeToMessageGrain(IGrainFactory grainFactory, IMessageGrain message)
     {

@@ -9,8 +9,8 @@ public interface ICommunicationObserver :
 {
     event EventHandler<string>? OnChange;
 
-    Task Subscribe(IGrainFactory grainFactory);
-    Task Unsubscribe(IGrainFactory grainFactory);
+    Task SubscribeToGrain();
+    Task UnsubscribeFromGrain();
 
     Task SubscribeToConversationGrain(IGrainFactory grainFactory, IConversationGrain conversation)
     {

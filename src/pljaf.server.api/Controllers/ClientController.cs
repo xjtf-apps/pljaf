@@ -40,23 +40,19 @@ public class ClientController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            // TODO: rework
-
-
-            var messages = new List<string>();
-            var conversations = await CurrentUser.GetConversationsAsync()!;
-            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var conversationObservers = conversations.Select(conv => new ConversationClient(conv));
-
+            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            var webSocketMessages = new List<string>();
             var webSocketTask = Task.Run(async () =>
             {
-                while (true)
+                while (webSocket.State == WebSocketState.Open)
                 {
-
-                    await SendAsync(webSocket, messages);
-                    await Task.Delay(1_000);
+                    var cts = new CancellationTokenSource(millisecondsDelay: 1000);
+                    var client = new ForwardedUserClient(_grainFactory, user: CurrentUser);
+                    var clientWork = client.ObservationTaskForWebSocket(webSocketMessages, cts.Token);
+                    await SendAsync(webSocket, webSocketMessages);
+                    await clientWork;
                 }
-            
+
             }, ApplicationStopping);
 
             await webSocketTask;
@@ -83,5 +79,6 @@ public class ClientController : ControllerBase
     {
         var status = WebSocketCloseStatus.EndpointUnavailable;
         await webSocket.CloseAsync(status, null, ApplicationStopping);
+        webSocket.Dispose();
     }
 }

@@ -2,28 +2,30 @@
 
 namespace pljaf.server.api;
 
-public class ConversationClient : ICommunicationObserver, IDisposable
+public sealed class ConversationObserver : ICommunicationObserver, IAsyncDisposable
 {
     private readonly object _lock = new();
+    private readonly IGrainFactory _grainFactory;
     private readonly IConversationGrain _conversation;
     private readonly List<IMessageGrain> _messages = new();
-    private readonly List<MessageClient> _messageObservers = new();
+    private readonly List<MessageObserver> _messageObservers = new();
 
     public event EventHandler<string>? OnChange;
 
-    public ConversationClient(IConversationGrain conversation)
+    public ConversationObserver(IGrainFactory grainFactory, IConversationGrain conversation)
     {
         _conversation = conversation;
+        _grainFactory = grainFactory;
     }
 
-    public async Task Subscribe(IGrainFactory grainFactory)
+    public async Task SubscribeToGrain()
     {
-        await ((ICommunicationObserver)this).SubscribeToConversationGrain(grainFactory, _conversation);
+        await ((ICommunicationObserver)this).SubscribeToConversationGrain(_grainFactory, _conversation);
     }
 
-    public async Task Unsubscribe(IGrainFactory grainFactory)
+    public async Task UnsubscribeFromGrain()
     {
-        await ((ICommunicationObserver)this).UnsubscribeFromConversationGrain(grainFactory, _conversation);
+        await ((ICommunicationObserver)this).UnsubscribeFromConversationGrain(_grainFactory, _conversation);
     }
 
     public async Task OnNameChanged(string name)
@@ -54,15 +56,16 @@ public class ConversationClient : ICommunicationObserver, IDisposable
     public async Task OnMessagePosted(IMessageGrain message)
     {
         OnChange?.Invoke(this, $"Conversation:MessagePosted, ConvId={await _conversation.GetIdAsync()}, MessageId={await message.GetIdAsync()}");
+        var messageClient = new MessageObserver(_grainFactory, message);
 
         try
         {
             if (Monitor.TryEnter(_lock))
             {
                 _messages.Add(message);
-                _messageObservers.Add(new MessageClient(message));
-                _messageObservers[-1].Subscribe(message.get)
-                _messageObservers[-1].OnChange += ConversationClient_OnMessageChange;
+                _messageObservers.Add(messageClient);
+                await messageClient.SubscribeToGrain();
+                messageClient.OnChange += ConversationClient_OnMessageChange;
             }
         }
         finally
@@ -77,11 +80,14 @@ public class ConversationClient : ICommunicationObserver, IDisposable
         OnChange?.Invoke(this, $"Conversation:MessageChanged, ConvId={await _conversation.GetIdAsync()},{Environment.NewLine}{e}");
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _messageObservers.ForEach(obs =>
+        await _messageObservers.ToAsyncEnumerable().ForEachAsync(async obs =>
         {
             obs.OnChange -= ConversationClient_OnMessageChange;
+            await obs.UnsubscribeFromGrain();
+            await obs.DisposeAsync();
         });
+        await UnsubscribeFromGrain();
     }
 }

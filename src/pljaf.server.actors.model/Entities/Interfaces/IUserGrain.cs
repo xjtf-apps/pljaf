@@ -20,5 +20,6 @@ public interface IUserGrain : IGrainWithStringKey
     Task<Tokens> GetTokensAsync();
     Task SetTokensAsync(Tokens tokens);
 
+    Task<int> GetConversationsCountAsync();
     Task<List<IConversationGrain>> GetConversationsAsync();
 }

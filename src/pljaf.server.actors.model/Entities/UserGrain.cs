@@ -33,6 +33,7 @@ public class UserGrain : Grain, IUserGrain
     public async Task<Options> GetOptionsAsync() => await Task.FromResult(_options.State);
     public async Task<Profile> GetProfileAsync() => await Task.FromResult(_profile.State);
     public async Task<List<IUserGrain>> GetContactsAsync() => await Task.FromResult(_contacts.State);
+    public async Task<int> GetConversationsCountAsync() => await Task.FromResult(_conversations.State.Count);
     public async Task<List<IConversationGrain>> GetConversationsAsync() => await Task.FromResult(_conversations.State);
 
 
