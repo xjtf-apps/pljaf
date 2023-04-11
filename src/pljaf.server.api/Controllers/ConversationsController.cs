@@ -232,8 +232,8 @@ public class ConversationsController : ControllerBase
 
         await conversation.InviteToConversationAsync(new Invitation()
         {
-            Inviter = currentUser,
-            Invited = targetUser,
+            InviterId = await currentUser.GetIdAsync(),
+            InvitedId = await targetUser.GetIdAsync(),
             Timestamp = DateTime.UtcNow
         });
 

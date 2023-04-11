@@ -7,11 +7,11 @@ namespace pljaf.server.model;
 
 public class ConversationGrain : Grain, IConversationGrain
 {
-    private readonly IPersistentState<string?> _name;
-    private readonly IPersistentState<string?> _topic;
-    private readonly IPersistentState<List<IUserGrain>> _members;
+    private readonly IPersistentState<StringValue> _name;
+    private readonly IPersistentState<StringValue> _topic;
+    private readonly IPersistentState<List<StringValue>> _memberIds;
+    private readonly IPersistentState<List<Guid>> _communicationIds;
     private readonly IPersistentState<List<Invitation>> _invitations;
-    private readonly IPersistentState<List<IMessageGrain>> _communications;
 
     private readonly ObserverManager<IConvNameChangedObserver> _nameChangedManager;
     private readonly ObserverManager<IConvTopicChangedObserver> _topicChangedManager;
@@ -21,17 +21,17 @@ public class ConversationGrain : Grain, IConversationGrain
 
     public ConversationGrain(
         ILogger<ConversationGrain> logger,
-        [PersistentState(Constants.StoreKeys.Conversation.Name)]IPersistentState<string?> name,
-        [PersistentState(Constants.StoreKeys.Conversation.Topic)]IPersistentState<string?> topic,
-        [PersistentState(Constants.StoreKeys.Conversation.Members)]IPersistentState<List<IUserGrain>> members,
+        [PersistentState(Constants.StoreKeys.Conversation.Name)]IPersistentState<StringValue> name,
+        [PersistentState(Constants.StoreKeys.Conversation.Topic)]IPersistentState<StringValue> topic,
+        [PersistentState(Constants.StoreKeys.Conversation.Members)]IPersistentState<List<StringValue>> members,
         [PersistentState(Constants.StoreKeys.Conversation.Invitations)]IPersistentState<List<Invitation>> invitations,
-        [PersistentState(Constants.StoreKeys.Conversation.Communications)]IPersistentState<List<IMessageGrain>> communications)
+        [PersistentState(Constants.StoreKeys.Conversation.Communications)]IPersistentState<List<Guid>> communications)
     {
         _name = name;
         _topic = topic;
-        _members = members;
+        _memberIds = members;
         _invitations = invitations;
-        _communications = communications;
+        _communicationIds = communications;
 
         var observersTimespan = TimeSpan.FromMinutes(5);
         _nameChangedManager = new ObserverManager<IConvNameChangedObserver>(observersTimespan, logger);
@@ -42,48 +42,48 @@ public class ConversationGrain : Grain, IConversationGrain
     }
 
     public async Task<Guid> GetIdAsync() => await Task.FromResult(this.GetGrainId().GetGuidKey());
-    public async Task<string> GetNameAsync() => await Task.FromResult(_name.State ?? "");
-    public async Task<string> GetTopicAsync() => await Task.FromResult(_topic.State ?? "");
-    public async Task<List<IUserGrain>> GetMembersAsync() => await Task.FromResult(_members.State);
-    public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_members.State.Count() > 2);
-    public async Task<List<IUserGrain>> GetInvitedMembersAsync() => await Task.FromResult(_invitations.State.Select(inv => inv.Invited).Distinct().ToList());
-    public async Task<int> GetMessageCountAsync() => await Task.FromResult(_communications.State.Count);
+    public async Task<string> GetNameAsync() => await Task.FromResult(_name.State.Value ?? "");
+    public async Task<string> GetTopicAsync() => await Task.FromResult(_topic.State.Value ?? "");
+    public async Task<int> GetMessageCountAsync() => await Task.FromResult(_communicationIds.State.Count);
+    public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_memberIds.State.Count() > 2);
+    public async Task<List<IUserGrain>> GetMembersAsync() => await Task.FromResult(_memberIds.State.Select(userId => GrainFactory.GetGrain<IUserGrain>(userId.Value!)).ToList());
+    public async Task<List<IUserGrain>> GetInvitedMembersAsync() => await Task.FromResult(_invitations.State.Select(inv => inv.InvitedId).Distinct().Select(invId => GrainFactory.GetGrain<IUserGrain>(invId)).ToList());
 
     public async Task PostMessageAsync(IMessageGrain message)
     {
-        await _communications.AddItemAndPersistAsync(message);
+        await _communicationIds.AddItemAndPersistAsync(await message.GetIdAsync());
         await _communicationChangedManager.Notify(sub => sub.OnMessagePosted(message));
     }
 
     public async Task SetNameAsync(string name)
     {
-        await _name.SetValueAndPersistAsync(name);
+        await _name.SetValueAndPersistAsync(new StringValue() { Value = name });
         await _nameChangedManager.Notify(sub => sub.OnNameChanged(name));
     }
 
     public async Task SetTopicAsync(string topic)
     {
-        await _topic.SetValueAndPersistAsync(topic);
+        await _topic.SetValueAndPersistAsync(new StringValue() { Value = topic });
         await _topicChangedManager.Notify(sub => sub.OnTopicChanged(topic));
     }
 
     public async Task LeaveConversationAsync(IUserGrain leavingUser)
     {
-        await _members.RemoveItemAndPersistAsync(leavingUser);
+        await _memberIds.RemoveItemAndPersistAsync(new StringValue() { Value = await leavingUser.GetIdAsync() });
         await _membersChangedManager.Notify(sub => sub.OnMemberLeft(leavingUser));
     }
 
     public async Task InviteToConversationAsync(Invitation invitation)
     {
         await _invitations.AddItemAndPersistAsync(invitation);
-        await _invitesChangedManager.Notify(sub => sub.OnMemberInvited(invitation.Inviter, invitation.Invited));
+        await _invitesChangedManager.Notify(sub => sub.OnMemberInvited(GrainFactory.GetGrain<IUserGrain>(invitation.InviterId), GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId)));
     }
 
     public async Task<Invitation?> GetInvitationAsync(IUserGrain invitedUser)
     {
         var userId = await invitedUser.GetIdAsync();
         var invitation = await _invitations.State.ToAsyncEnumerable()
-            .WhereAwait(async inv => (await inv.Invited.GetIdAsync()) == userId)
+            .Where(inv => inv.InvitedId == userId)
             .LastOrDefaultAsync();
 
         return invitation;
@@ -92,35 +92,36 @@ public class ConversationGrain : Grain, IConversationGrain
     public async Task ResolveInvitationAsync(Invitation invitation, bool accepted)
     {
         await _invitations.RemoveItemAndPersistAsync(invitation);
-        await RemoveOtherInvitationsAsync(invitation.Invited);
+        await RemoveOtherInvitationsAsync(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId));
         if (accepted)
         {
-            await _members.AddItemAndPersistAsync(invitation.Invited);
-            await _membersChangedManager.Notify(sub => sub.OnMemberJoined(invitation.Invited));
+            await _memberIds.AddItemAndPersistAsync(new StringValue() { Value = invitation.InvitedId });
+            await _membersChangedManager.Notify(sub => sub.OnMemberJoined(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId)));
         }
     }
 
     public async Task InitializeNewConversationAsync(IUserGrain initiator, IUserGrain contact, IMessageGrain firstMessage)
     {
-        _members.State.Add(initiator);
-        _members.State.Add(contact);
-        await _members.WriteStateAsync();
-        await _communications.AddItemAndPersistAsync(firstMessage);
+        _memberIds.State.Add(new StringValue() { Value = await initiator.GetIdAsync() });
+        _memberIds.State.Add(new StringValue() { Value = await contact.GetIdAsync() });
+        await _memberIds.WriteStateAsync();
+        await _communicationIds.AddItemAndPersistAsync(await firstMessage.GetIdAsync());
         await _communicationChangedManager.Notify(sub => sub.OnMessagePosted(firstMessage));
     }
 
     public async Task InitializeNewGroupConversationAsync(IUserGrain initiator, List<IUserGrain> contacts, IMessageGrain firstMessage)
     {
-        _members.State.Add(initiator);
-        foreach (var contact in contacts) _members.State.Add(contact);
-        await _members.WriteStateAsync(); await _communications.AddItemAndPersistAsync(firstMessage);
+        _memberIds.State.Add(new StringValue() { Value = await initiator.GetIdAsync() });
+        foreach (var contact in contacts) _memberIds.State.Add(new StringValue() { Value = await contact.GetIdAsync() });
+        await _memberIds.WriteStateAsync(); await _communicationIds.AddItemAndPersistAsync(await firstMessage.GetIdAsync());
         await _communicationChangedManager.Notify(sub => sub.OnMessagePosted(firstMessage));
     }
 
     public async Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null)
     {
         var query =
-            _communications.State.ToAsyncEnumerable()
+            _communicationIds.State.ToAsyncEnumerable()
+            .Select(messageId => GrainFactory.GetGrain<IMessageGrain>(messageId))
             .WhereAwait(async message => datetimeFrom == null || (await message.GetTimestampAsync() > datetimeFrom))
             .WhereAwait(async message => datetimeTo == null || (await message.GetTimestampAsync() <= datetimeTo))
             .ToListAsync();
@@ -132,7 +133,7 @@ public class ConversationGrain : Grain, IConversationGrain
     {
         var userId = await invited.GetIdAsync();
         await _invitations.State.ToAsyncEnumerable()
-            .WhereAwait(async inv => (await inv.Invited.GetIdAsync()) == userId)
+            .Where(inv => inv.InvitedId == userId)
             .ForEachAsync(async inv => await _invitations.RemoveItemAndPersistAsync(inv));
     }
 
