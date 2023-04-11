@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Authorization;
 
 using pljaf.server.model;
 using pljaf.client.model;
-using System.Runtime.InteropServices;
 
 namespace pljaf.server.api.Controllers;
 
@@ -328,10 +328,10 @@ public class ConversationRequest
     public string? Name { get; set; }
     public string? Topic { get; set; }
     public required List<string> RequestedMembers { get; set; }
-    public required byte[] EncryptedTextData { get; set; }
+    public required string EncryptedTextData { get; set; }
 }
 
 public class MessageRequest
 {
-    public required byte[] EncryptedTextData { get; set; }
+    public required string EncryptedTextData { get; set; }
 }

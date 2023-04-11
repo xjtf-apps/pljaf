@@ -7,8 +7,6 @@ public interface ICommunicationObserver :
     IConvInvitesChangedObserver,
     IConvCommunicationChangedObserver
 {
-    event EventHandler<string>? OnChange;
-
     Task SubscribeToGrain();
     Task UnsubscribeFromGrain();
 

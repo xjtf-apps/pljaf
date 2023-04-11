@@ -4,8 +4,6 @@ public interface IMessageObserver :
     IMessageAuthoredObserver,
     IMessageMediaAttachedObserver
 {
-    event EventHandler<string>? OnChange;
-
     Task SubscribeToGrain();
     Task UnsubscribeFromGrain();
 

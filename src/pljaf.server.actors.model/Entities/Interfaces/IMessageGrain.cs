@@ -10,9 +10,9 @@ public interface IMessageGrain : IGrainWithGuidKey
 
     Task SetMediaReferenceAsync(Media? media);
     Task<Media?> GetMediaReferenceAsync();
-    Task<byte[]> GetEncryptedTextDataAsync();
+    Task<string> GetEncryptedTextDataAsync();
 
-    Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, byte[] encryptedTextData);
+    Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, string encryptedTextData);
 
     #region observers
     Task Subscribe(IMessageMediaAttachedObserver mediaAttachedObserver);
