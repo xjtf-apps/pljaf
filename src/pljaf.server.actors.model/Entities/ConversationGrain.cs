@@ -57,19 +57,19 @@ public class ConversationGrain : Grain, IConversationGrain
 
     public async Task SetNameAsync(string name)
     {
-        await _name.SetValueAndPersistAsync(new StringValue() { Value = name });
+        await _name.SetValueAndPersistAsync(StringValue.New(name));
         await _nameChangedManager.Notify(sub => sub.OnNameChanged(name));
     }
 
     public async Task SetTopicAsync(string topic)
     {
-        await _topic.SetValueAndPersistAsync(new StringValue() { Value = topic });
+        await _topic.SetValueAndPersistAsync(StringValue.New(topic));
         await _topicChangedManager.Notify(sub => sub.OnTopicChanged(topic));
     }
 
     public async Task LeaveConversationAsync(IUserGrain leavingUser)
     {
-        await _memberIds.RemoveItemAndPersistAsync(new StringValue() { Value = await leavingUser.GetIdAsync() });
+        await _memberIds.RemoveItemAndPersistAsync(StringValue.New(await leavingUser.GetIdAsync()));
         await _membersChangedManager.Notify(sub => sub.OnMemberLeft(leavingUser));
     }
 
@@ -95,24 +95,31 @@ public class ConversationGrain : Grain, IConversationGrain
         await RemoveOtherInvitationsAsync(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId));
         if (accepted)
         {
-            await _memberIds.AddItemAndPersistAsync(new StringValue() { Value = invitation.InvitedId });
+            await _memberIds.AddItemAndPersistAsync(StringValue.New(invitation.InvitedId));
             await _membersChangedManager.Notify(sub => sub.OnMemberJoined(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId)));
         }
     }
 
     public async Task InitializeNewConversationAsync(IUserGrain initiator, IUserGrain contact, IMessageGrain firstMessage)
     {
-        _memberIds.State.Add(new StringValue() { Value = await initiator.GetIdAsync() });
-        _memberIds.State.Add(new StringValue() { Value = await contact.GetIdAsync() });
+        _memberIds.State.Add(StringValue.New(await initiator.GetIdAsync()));
+        _memberIds.State.Add(StringValue.New(await contact.GetIdAsync()));
         await _memberIds.WriteStateAsync();
         await _communicationIds.AddItemAndPersistAsync(await firstMessage.GetIdAsync());
         await _communicationChangedManager.Notify(sub => sub.OnMessagePosted(firstMessage));
+        await initiator.Internal_AddToConversationAsync(await GetIdAsync());
+        await contact.Internal_AddToConversationAsync(await GetIdAsync());
     }
 
     public async Task InitializeNewGroupConversationAsync(IUserGrain initiator, List<IUserGrain> contacts, IMessageGrain firstMessage)
     {
-        _memberIds.State.Add(new StringValue() { Value = await initiator.GetIdAsync() });
-        foreach (var contact in contacts) _memberIds.State.Add(new StringValue() { Value = await contact.GetIdAsync() });
+        _memberIds.State.Add(StringValue.New(await initiator.GetIdAsync()));
+        await initiator.Internal_AddToConversationAsync(await GetIdAsync());
+        foreach (var contact in contacts)
+        {
+            _memberIds.State.Add(StringValue.New(await contact.GetIdAsync()));
+            await contact.Internal_AddToConversationAsync(await GetIdAsync());
+        }
         await _memberIds.WriteStateAsync(); await _communicationIds.AddItemAndPersistAsync(await firstMessage.GetIdAsync());
         await _communicationChangedManager.Notify(sub => sub.OnMessagePosted(firstMessage));
     }

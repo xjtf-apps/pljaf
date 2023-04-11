@@ -32,14 +32,17 @@ public class UserGrain : Grain, IUserGrain
     public async Task<Tokens> GetTokensAsync() => await Task.FromResult(_tokens.State);
     public async Task<Options> GetOptionsAsync() => await Task.FromResult(_options.State);
     public async Task<Profile> GetProfileAsync() => await Task.FromResult(_profile.State);
-    public async Task<int> GetConversationsCountAsync() => await Task.FromResult(_conversationIds.State.Count);
+    public async Task<int> GetConversationsCountAsync() => await Task.FromResult(_conversationIds.State.Distinct().Count());
     public async Task<List<IUserGrain>> GetContactsAsync() => await Task.FromResult(_contactIds.State.Select(contactId => GrainFactory.GetGrain<IUserGrain>(contactId.Value!)).ToList());
-    public async Task<List<IConversationGrain>> GetConversationsAsync() => await Task.FromResult(_conversationIds.State.Select(convId => GrainFactory.GetGrain<IConversationGrain>(convId)).ToList());
+    public async Task<List<IConversationGrain>> GetConversationsAsync() => await Task.FromResult(_conversationIds.State.Distinct().Select(convId => GrainFactory.GetGrain<IConversationGrain>(convId)).ToList());
 
 
     public async Task SetTokensAsync(Tokens tokens) => await _tokens.SetValueAndPersistAsync(tokens);
     public async Task SetOptionsAsync(Options options) => await _options.SetValueAndPersistAsync(options);
     public async Task SetProfileAsync(Profile profile) => await _profile.SetValueAndPersistAsync(profile);
-    public async Task AddContactAsync(IUserGrain contact) => await _contactIds.AddItemAndPersistAsync(new StringValue() { Value = await contact.GetIdAsync() });
-    public async Task RemoveContactAsync(IUserGrain contact) => await _contactIds.RemoveItemAndPersistAsync(new StringValue() { Value = await contact.GetIdAsync() });
+    public async Task AddContactAsync(IUserGrain contact) => await _contactIds.AddItemAndPersistAsync(StringValue.New(await contact.GetIdAsync()));
+    public async Task RemoveContactAsync(IUserGrain contact) => await _contactIds.RemoveItemAndPersistAsync(StringValue.New(await contact.GetIdAsync()));
+
+    public async Task Internal_AddToConversationAsync(Guid conversationId) => await _conversationIds.AddItemAndPersistAsync(conversationId);
+    public async Task Internal_RemoveFromConversationAsync(Guid conversationId) => await _conversationIds.RemoveItemAndPersistAsync(conversationId);
 }

@@ -22,4 +22,7 @@ public interface IUserGrain : IGrainWithStringKey
 
     Task<int> GetConversationsCountAsync();
     Task<List<IConversationGrain>> GetConversationsAsync();
+
+    Task Internal_AddToConversationAsync(Guid conversationId);
+    Task Internal_RemoveFromConversationAsync(Guid conversationId);
 }

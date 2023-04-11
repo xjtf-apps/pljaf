@@ -36,7 +36,7 @@ public class MessageGrain : Grain, IMessageGrain
     public async Task<IUserGrain> GetSenderAsync() => await Task.FromResult(GrainFactory.GetGrain<IUserGrain>(_senderId.State.Value));
     public async Task<DateTime> GetTimestampAsync() => await Task.FromResult(_timestamp.State);
     public async Task<Media?> GetMediaReferenceAsync() => await Task.FromResult(_mediaReference.State);
-    public async Task<string> GetEncryptedTextDataAsync() => await Task.FromResult(_encryptedTextData.State.Value);
+    public async Task<string> GetEncryptedTextDataAsync() => await Task.FromResult(_encryptedTextData.State.Value!);
 
     public async Task SetMediaReferenceAsync(Media? mediaReference)
     {
@@ -46,9 +46,9 @@ public class MessageGrain : Grain, IMessageGrain
 
     public async Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, string encryptedTextData)
     {
-        _senderId.State = new StringValue() { Value = await sender.GetIdAsync() }; await _senderId.WriteStateAsync();
+        _senderId.State = StringValue.New(await sender.GetIdAsync()); await _senderId.WriteStateAsync();
         _timestamp.State = timestamp; await _timestamp.WriteStateAsync();
-        _encryptedTextData.State = new StringValue() { Value = encryptedTextData }; await _encryptedTextData.WriteStateAsync();
+        _encryptedTextData.State = StringValue.New(encryptedTextData); await _encryptedTextData.WriteStateAsync();
         await _messageAuthoredManager.Notify(sub => sub.ReceiveSentConfirmation(timestamp));
     }
 

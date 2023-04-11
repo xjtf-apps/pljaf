@@ -155,8 +155,8 @@ public class ConversationsController : ControllerBase
                     MediaRef = mediaRef != null ? new AnyMediaReference { StoreId =  mediaRef.StoreId } : null,
                 };
             }),
-            EarliestMessageTimestamp = await messages.ToAsyncEnumerable().MinAsync(async m => await m.GetTimestampAsync()),
-            LastestMessageTimestamp = await messages.ToAsyncEnumerable().MaxAsync(async m => await m.GetTimestampAsync()),
+            EarliestMessageTimestamp = await messages.ToAsyncEnumerable().MinAwaitAsync(async m => await m.GetTimestampAsync()),
+            LastestMessageTimestamp = await messages.ToAsyncEnumerable().MaxAwaitAsync(async m => await m.GetTimestampAsync()),
             SelectedMessagesCount = messages.Count,
             TotalMessageCount = await conversation.GetMessageCountAsync()
         });

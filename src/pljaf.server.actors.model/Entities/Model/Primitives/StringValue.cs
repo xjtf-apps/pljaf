@@ -18,4 +18,8 @@ public class StringValue
     {
         return Value?.GetHashCode() ?? 0;
     }
+
+    public static StringValue New(string? value = null)
+        =>
+            new() { Value = value };
 }
