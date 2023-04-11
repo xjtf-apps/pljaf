@@ -14,7 +14,6 @@ public class ClientController : ControllerBase
 {
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtService;
-    private readonly ICommunicationObserver _clientObserver;
     private readonly IHostApplicationLifetime _applicationLifetime;
 
     private string? CurrentUserId => _jwtService.GetUserIdFromRequest(HttpContext);
@@ -24,12 +23,10 @@ public class ClientController : ControllerBase
     public ClientController(
         IGrainFactory grainFactory,
         JwtTokenService jwtTokenService,
-        ICommunicationObserver clientObserver,
         IHostApplicationLifetime applicationLifetime)
     {
         _grainFactory = grainFactory;
         _jwtService = jwtTokenService;
-        _clientObserver = clientObserver;
         _applicationLifetime = applicationLifetime;
     }
 

@@ -29,7 +29,6 @@ builder.Services.AddTransient<TwillioSettingsService>();
 builder.Services.AddTransient<MediaSettingsService>();
 builder.Services.AddTransient<JwtSettingsService>();
 builder.Services.AddTransient<JwtTokenService>();
-builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -90,6 +89,5 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-//app.MapHub<ClientHub>("/client");
 app.MapControllers();
 app.Run();
