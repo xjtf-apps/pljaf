@@ -2,13 +2,10 @@
 
 namespace pljaf.server.api;
 
-public sealed class ConversationObserver : ICommunicationObserver, IAsyncDisposable
+public sealed class ConversationObserver : ICommunicationObserver
 {
-    private readonly object _lock = new();
     private readonly IGrainFactory _grainFactory;
     private readonly IConversationGrain _conversation;
-    private readonly List<IMessageGrain> _messages = new();
-    private readonly List<MessageObserver> _messageObservers = new();
 
     public event EventHandler<string>? OnChange;
 
@@ -56,38 +53,5 @@ public sealed class ConversationObserver : ICommunicationObserver, IAsyncDisposa
     public async Task OnMessagePosted(IMessageGrain message)
     {
         OnChange?.Invoke(this, $"Conversation:MessagePosted, ConvId={await _conversation.GetIdAsync()}, MessageId={await message.GetIdAsync()}");
-        var messageClient = new MessageObserver(_grainFactory, message);
-
-        try
-        {
-            if (Monitor.TryEnter(_lock))
-            {
-                _messages.Add(message);
-                _messageObservers.Add(messageClient);
-                await messageClient.SubscribeToGrain();
-                messageClient.OnChange += ConversationClient_OnMessageChange;
-            }
-        }
-        finally
-        {
-            if (Monitor.IsEntered(_lock))
-                Monitor.Exit(_lock);
-        }
-    }
-
-    private async void ConversationClient_OnMessageChange(object? sender, string e)
-    {
-        OnChange?.Invoke(this, $"Conversation:MessageChanged, ConvId={await _conversation.GetIdAsync()},{Environment.NewLine}{e}");
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _messageObservers.ToAsyncEnumerable().ForEachAsync(async obs =>
-        {
-            obs.OnChange -= ConversationClient_OnMessageChange;
-            await obs.UnsubscribeFromGrain();
-            await obs.DisposeAsync();
-        });
-        await UnsubscribeFromGrain();
     }
 }

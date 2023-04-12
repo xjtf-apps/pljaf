@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Authorization;
 
 using pljaf.server.model;
@@ -15,13 +13,16 @@ public class ConversationsController : ControllerBase
 {
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtTokenService;
+    private readonly MediaSettingsService _mediaSettingsService;
 
     public ConversationsController(
         IGrainFactory grainFactory,
-        JwtTokenService jwtTokenService)
+        JwtTokenService jwtTokenService,
+        MediaSettingsService mediaSettingsService)
     {
         _grainFactory = grainFactory;
         _jwtTokenService = jwtTokenService;
+        _mediaSettingsService = mediaSettingsService;
     }
 
     [HttpGet]
@@ -92,9 +93,11 @@ public class ConversationsController : ControllerBase
     [HttpPost]
     [Authorize]
     [Route("/conversations/{convId}/message/new")]
+    [Route("/conversations/{convId}/message/media/new")]
     public async Task<IActionResult> PostMessage([FromBody] MessageRequest model, [FromRoute] string convId)
     {
         var msgId = Guid.NewGuid();
+        var mediaData = model.MediaMetadata;
         var conversationId = Guid.Parse(convId);
         var message = _grainFactory.GetGrain<IMessageGrain>(msgId);
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
@@ -106,7 +109,10 @@ public class ConversationsController : ControllerBase
             .FirstOrDefaultAsync();
 
         if (conversation == null) return BadRequest("No such conversation found");
-        await message.AuthorMessageAsync(currentUser, DateTime.UtcNow, model.EncryptedTextData);
+        if (!CheckMediaPayloadSize(mediaData)) return BadRequest("Media file size too large");
+
+        ExtractMediaPayload(mediaData, out Media? media);
+        await message.AuthorMessageAsync(currentUser, DateTime.UtcNow, model.EncryptedTextData, media);
         await conversation.PostMessageAsync(message);
 
         return Ok(new
@@ -289,12 +295,18 @@ public class ConversationsController : ControllerBase
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
         var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
+        var message = _grainFactory.GetGrain<IMessageGrain>(Guid.NewGuid());
+        var mediaData = model.MediaMetadata;
         var convId = Guid.NewGuid();
 
-        // author message, TODO: support attached media
-        var message = _grainFactory.GetGrain<IMessageGrain>(Guid.NewGuid());
+        if (!CheckMediaPayloadSize(mediaData))
+        {
+            return BadRequest("Media file size too large");
+        }
+        ExtractMediaPayload(mediaData, out Media? media);
+
         await message.AuthorMessageAsync
-            (currentUser, DateTime.UtcNow, model.EncryptedTextData);
+            (currentUser, DateTime.UtcNow, model.EncryptedTextData, media);
 
         var members = model.RequestedMembers.Select(m =>
         {
@@ -321,6 +333,33 @@ public class ConversationsController : ControllerBase
             MessageId = new MsgId(await message.GetIdAsync())
         });
     }
+
+    private void ExtractMediaPayload(MediaData? mediaData, out Media? media)
+    {
+        media = null;
+        if (mediaData == null) return;
+        using var writeStream = new MemoryStream();
+        using var readStream = mediaData.MediaDataTransfer.OpenReadStream();
+        readStream.CopyTo(writeStream);
+
+        media = new()
+        {
+            StoreId = Guid.NewGuid(),
+            BinaryData = writeStream.ToArray(),
+            Filename = mediaData.MediaDataTransfer.FileName
+        };
+    }
+
+    private bool CheckMediaPayloadSize(MediaData? mediaData)
+    {
+        if (mediaData == null) return true;
+        var mediaDataType = mediaData.MediaType;
+        var mediaSize = mediaData.MediaDataTransfer.Length;
+        if (mediaDataType == MediaDataType.Image && mediaSize > _mediaSettingsService.MaxImageSize) return false;
+        if (mediaDataType == MediaDataType.Audio && mediaSize > _mediaSettingsService.MaxAudioSize) return false;
+        if (mediaDataType == MediaDataType.Video && mediaSize > _mediaSettingsService.MaxVideoSize) return false;
+        return true;
+    }
 }
 
 public class ConversationRequest
@@ -328,10 +367,23 @@ public class ConversationRequest
     public string? Name { get; set; }
     public string? Topic { get; set; }
     public required List<string> RequestedMembers { get; set; }
+    public required MediaData? MediaMetadata { get; set; }
     public required string EncryptedTextData { get; set; }
 }
 
 public class MessageRequest
 {
+    public required MediaData? MediaMetadata { get; set; }
     public required string EncryptedTextData { get; set; }
+}
+
+public class MediaData
+{
+    public required MediaDataType MediaType { get; set; }
+    public required IFormFile MediaDataTransfer { get; set; }
+}
+
+public enum MediaDataType
+{
+    Image, Audio, Video
 }

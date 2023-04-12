@@ -53,8 +53,6 @@ public class ForwardedUserClient
                 var observer = observers[i];
                 await observer.UnsubscribeFromGrain();
                 observer.OnChange -= ConversationObserver_OnChange;
-
-                await observer.DisposeAsync();
             }
             observers.Clear();
             observers_count = 0;
