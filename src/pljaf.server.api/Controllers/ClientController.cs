@@ -1,9 +1,9 @@
-﻿using System.Net.WebSockets;
+﻿using System.Text;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using pljaf.server.model;
-using System.Text;
 
 namespace pljaf.server.api.Controllers;
 
@@ -68,14 +68,14 @@ public class ClientController : ControllerBase
             var message = messages[i];
             var messageType = WebSocketMessageType.Text;
             var messageContent = Encoding.UTF8.GetBytes(message);
-            await webSocket.SendAsync(messageContent, messageType, true, ApplicationStopping);
+            await webSocket.SendAsync(messageContent, messageType, true, default);
         }
     }
 
     private async Task CloseAsync(WebSocket webSocket)
     {
         var status = WebSocketCloseStatus.EndpointUnavailable;
-        await webSocket.CloseAsync(status, null, ApplicationStopping);
+        await webSocket.CloseAsync(status, null, default);
         webSocket.Dispose();
     }
 }

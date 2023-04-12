@@ -67,7 +67,7 @@ public class ForwardedUserClient
             while (true)
             {
                 var elapsed = watch.Elapsed.TotalMilliseconds;
-                if (elapsed % 20 == 0)
+                if (elapsed % 10 == 0 || elapsed % 9 == 0 || elapsed % 8 == 0 || elapsed % 7 == 0)
                 {
                     if (await Check())
                     {
