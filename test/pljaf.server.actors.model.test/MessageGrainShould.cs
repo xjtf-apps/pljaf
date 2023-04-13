@@ -1,5 +1,6 @@
 ﻿namespace pljaf.server.model.test;
 
+
 [Collection(ClusterCollection.Name)]
 public class MessageGrainShould
 {
@@ -20,28 +21,38 @@ public class MessageGrainShould
     }
 
     [Fact]
-    public async Task GetCorrectMetadata()
+    public async Task GetCorrectDataAndMetadata()
     {
         var msgId = Guid.NewGuid();
         var msgTs = DateTime.UtcNow;
         var userPhone = "+385976133776";
         var msgGrain = GrainFactory.GetGrain<IMessageGrain>(msgId);
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
-        await msgGrain.AuthorMessageAsync(userGrain, msgTs, "Hello World!");
+        var msgMedia = new Media() { StoreId = Guid.NewGuid(), Filename = "file.ext", BinaryData = new byte[] { 0xAA, 0xBC } };
 
-        var sender = await msgGrain.GetSenderAsync();
-        var timestamp = await msgGrain.GetTimestampAsync();
-        var content = await msgGrain.GetEncryptedTextDataAsync();
+        await msgGrain.AuthorMessageAsync
+            (userGrain, msgTs, "Hello World!", msgMedia);
+
+        var tasks = new Task[]
+        {
+            msgGrain.GetSenderAsync(),
+            msgGrain.GetTimestampAsync(),
+            msgGrain.GetMediaReferenceAsync(),
+            msgGrain.GetEncryptedTextDataAsync()
+        };
+        await Task.WhenAll(tasks);
+        var sender = ((Task<IUserGrain>)tasks[0]).Result;
+        var timestamp = ((Task<DateTime>)tasks[1]).Result;
+        var media = ((Task<Media?>)tasks[2]).Result;
+        var content = ((Task<string>)tasks[3]).Result;
 
         Assert.NotNull(sender);
         Assert.Equal(msgTs, timestamp);
         Assert.Equal("Hello World!", content);
         Assert.Equal(userPhone, await sender.GetIdAsync());
-    }
-
-    [Fact]
-    public async Task GetCorrectMedia()
-    {
-
+        Assert.NotNull(media);
+        Assert.Equal(msgMedia.StoreId, media.StoreId);
+        Assert.Equal(msgMedia.Filename, media.Filename);
+        Assert.Equal(msgMedia.BinaryData, media.BinaryData);
     }
 }

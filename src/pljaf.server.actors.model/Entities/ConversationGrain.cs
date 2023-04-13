@@ -91,12 +91,13 @@ public class ConversationGrain : Grain, IConversationGrain
 
     public async Task ResolveInvitationAsync(Invitation invitation, bool accepted)
     {
+        var invitedUser = GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId);
         await _invitations.RemoveItemAndPersistAsync(invitation);
-        await RemoveOtherInvitationsAsync(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId));
+        await RemoveOtherInvitationsAsync(invitedUser);
         if (accepted)
         {
             await _memberIds.AddItemAndPersistAsync(StringValue.New(invitation.InvitedId));
-            await _membersChangedManager.Notify(sub => sub.OnMemberJoined(GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId)));
+            await _membersChangedManager.Notify(sub => sub.OnMemberJoined(invitedUser));
         }
     }
 
@@ -126,22 +127,28 @@ public class ConversationGrain : Grain, IConversationGrain
 
     public async Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null)
     {
-        var query =
-            _communicationIds.State.ToAsyncEnumerable()
-            .Select(messageId => GrainFactory.GetGrain<IMessageGrain>(messageId))
-            .WhereAwait(async message => datetimeFrom == null || (await message.GetTimestampAsync() > datetimeFrom))
-            .WhereAwait(async message => datetimeTo == null || (await message.GetTimestampAsync() <= datetimeTo))
-            .ToListAsync();
+        var messages = new List<IMessageGrain>(75);
 
-        return await query;
+        for (int i = 0; i < _communicationIds.State.Count; i++)
+        {
+            var messageId = _communicationIds.State[i];
+            var message = GrainFactory.GetGrain<IMessageGrain>(messageId);
+            if (datetimeFrom is { } && await message.GetTimestampAsync() < datetimeFrom) continue;
+            if (datetimeTo is { } && await message.GetTimestampAsync() > datetimeTo) continue;
+            messages.Add(message);
+        }
+
+        return messages;
     }
 
     private async Task RemoveOtherInvitationsAsync(IUserGrain invited)
     {
         var userId = await invited.GetIdAsync();
-        await _invitations.State.ToAsyncEnumerable()
-            .Where(inv => inv.InvitedId == userId)
-            .ForEachAsync(async inv => await _invitations.RemoveItemAndPersistAsync(inv));
+        var invitations = _invitations.State.Where(inv => inv.InvitedId == userId).ToList();
+        await invitations.ToAsyncEnumerable().ForEachAwaitAsync(async invitation =>
+        {
+            await _invitations.RemoveItemAndPersistAsync(invitation);
+        });
     }
 
     #region observers
