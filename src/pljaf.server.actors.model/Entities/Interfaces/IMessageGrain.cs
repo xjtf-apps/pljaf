@@ -1,14 +1,15 @@
 ﻿using Orleans;
+using Orleans.Concurrency;
 
 namespace pljaf.server.model;
 
 public interface IMessageGrain : IGrainWithGuidKey
 {
-    Task<Guid> GetIdAsync();
-    Task<IUserGrain> GetSenderAsync();
-    Task<DateTime> GetTimestampAsync();
-    Task<Media?> GetMediaReferenceAsync();
-    Task<string> GetEncryptedTextDataAsync();
+    [AlwaysInterleave] Task<Guid> GetIdAsync();
+    [AlwaysInterleave] Task<IUserGrain> GetSenderAsync();
+    [AlwaysInterleave] Task<DateTime> GetTimestampAsync();
+    [AlwaysInterleave] Task<Media?> GetMediaReferenceAsync();
+    [AlwaysInterleave] Task<string> GetEncryptedTextDataAsync();
 
     Task AuthorMessageAsync(IUserGrain sender, DateTime timestamp, string encryptedTextData, Media? media);
 }

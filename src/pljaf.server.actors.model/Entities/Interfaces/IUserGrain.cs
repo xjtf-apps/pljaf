@@ -1,27 +1,24 @@
 ﻿using Orleans;
+using Orleans.Concurrency;
 
 namespace pljaf.server.model;
 
 public interface IUserGrain : IGrainWithStringKey
 {
-    Task<string> GetIdAsync();
-    Task<Media?> GetAvatarAsync();
+    [AlwaysInterleave] Task<string> GetIdAsync();
+    [AlwaysInterleave] Task<Media?> GetAvatarAsync();
+    [AlwaysInterleave] Task<Options> GetOptionsAsync();
+    [AlwaysInterleave] Task<Profile> GetProfileAsync();
+    [AlwaysInterleave] Task<List<IUserGrain>> GetContactsAsync();
+    [AlwaysInterleave] Task<Tokens> GetTokensAsync();
+    [AlwaysInterleave] Task<int> GetConversationsCountAsync();
+    [AlwaysInterleave] Task<List<IConversationGrain>> GetConversationsAsync();
 
-    Task<Options> GetOptionsAsync();
     Task SetOptionsAsync(Options options);
-
-    Task<Profile> GetProfileAsync();
     Task SetProfileAsync(Profile profile);
-
-    Task<List<IUserGrain>> GetContactsAsync();
     Task AddContactAsync(IUserGrain contact);
     Task RemoveContactAsync(IUserGrain contact);
-
-    Task<Tokens> GetTokensAsync();
     Task SetTokensAsync(Tokens tokens);
-
-    Task<int> GetConversationsCountAsync();
-    Task<List<IConversationGrain>> GetConversationsAsync();
 
     Task Internal_AddToConversationAsync(Guid conversationId);
     Task Internal_RemoveFromConversationAsync(Guid conversationId);
