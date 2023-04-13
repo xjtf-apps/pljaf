@@ -111,7 +111,7 @@ public class ConversationsController : ControllerBase
         if (conversation == null) return BadRequest("No such conversation found");
         if (!CheckMediaPayloadSize(mediaData)) return BadRequest("Media file size too large");
 
-        ExtractMediaPayload(mediaData, out Media? media);
+        var media = await ExtractMediaPayload(mediaData);
         await message.AuthorMessageAsync(currentUser, DateTime.UtcNow, model.EncryptedTextData, media);
         await conversation.PostMessageAsync(message);
 
@@ -303,7 +303,7 @@ public class ConversationsController : ControllerBase
         {
             return BadRequest("Media file size too large");
         }
-        ExtractMediaPayload(mediaData, out Media? media);
+        var media = await ExtractMediaPayload(mediaData);
 
         await message.AuthorMessageAsync
             (currentUser, DateTime.UtcNow, model.EncryptedTextData, media);
@@ -334,15 +334,14 @@ public class ConversationsController : ControllerBase
         });
     }
 
-    private void ExtractMediaPayload(MediaData? mediaData, out Media? media)
+    private async Task<Media?> ExtractMediaPayload(MediaData? mediaData)
     {
-        media = null;
-        if (mediaData == null) return;
+        if (mediaData == null) return null;
         using var writeStream = new MemoryStream();
         using var readStream = mediaData.MediaDataTransfer.OpenReadStream();
-        readStream.CopyTo(writeStream);
+        await readStream.CopyToAsync(writeStream);
 
-        media = new()
+        return new()
         {
             StoreId = Guid.NewGuid(),
             BinaryData = writeStream.ToArray(),
