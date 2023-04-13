@@ -51,7 +51,7 @@ public class ConversationGrainShould
     public async Task GetCorrectMessageCount()
     {
         var convId = Guid.NewGuid();
-        var sender = GrainFactory.GetGrain<IUserGrain>("+385976133776");
+        var sender = GrainFactory.GetGrain<IUserGrain>("+3851111222");
         var conversation = GrainFactory.GetGrain<IConversationGrain>(convId);
         var messageIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
 

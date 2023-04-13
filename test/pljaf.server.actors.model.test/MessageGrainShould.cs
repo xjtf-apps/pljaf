@@ -25,7 +25,7 @@ public class MessageGrainShould
     {
         var msgId = Guid.NewGuid();
         var msgTs = DateTime.UtcNow;
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var msgGrain = GrainFactory.GetGrain<IMessageGrain>(msgId);
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
         var msgMedia = new Media() { StoreId = Guid.NewGuid(), Filename = "file.ext", BinaryData = new byte[] { 0xAA, 0xBC } };

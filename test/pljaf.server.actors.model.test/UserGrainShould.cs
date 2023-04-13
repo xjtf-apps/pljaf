@@ -12,7 +12,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectId()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
         var userGrainId = await userGrain.GetIdAsync();
 
@@ -22,7 +22,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectProfile()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
 
         var userProfileConfigured = new Profile()
@@ -50,7 +50,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectOptions()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
 
         var userOptionsConfigured = new Options()
@@ -67,7 +67,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectContacts()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
         var userContacts = new[] { "+385910000000", "+385951111222" }.Select(ph =>
         {
@@ -103,7 +103,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectTokens()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
         var userTokensConfigured = new Tokens()
         {
@@ -124,7 +124,7 @@ public class UserGrainShould
     [Fact]
     public async Task GetCorrectConversations()
     {
-        var userPhone = "+385976133776";
+        var userPhone = "+3851111222";
         var userGrain = GrainFactory.GetGrain<IUserGrain>(userPhone);
         var userConversations = new[] { Guid.NewGuid(), Guid.NewGuid() };
 
