@@ -33,6 +33,9 @@ public class ConversationsController : ControllerBase
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
         var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
         var conversations = await currentUser.GetConversationsAsync()!;
+        var invitations = await currentUser.GetInvitationsAsync()!;
+        var invitedConversations = await invitations.ToAsyncEnumerable()
+            .SelectAwait(async invite => await invite.GetConversationAsync()).ToListAsync();
 
         async ValueTask<bool> MatchesUser(IUserGrain someUser)
         {
@@ -61,14 +64,14 @@ public class ConversationsController : ControllerBase
             };
         }
 
-        return Ok(await conversations.ToAsyncEnumerable().WhereAwait(MatchesQuery).SelectAwait(async conv =>
+        return Ok(await conversations.Concat(invitedConversations).ToAsyncEnumerable().WhereAwait(MatchesQuery).SelectAwait(async conv =>
         {
             var id = await conv.GetIdAsync();
             var name = await conv.GetNameAsync();
             var topic = await conv.GetTopicAsync();
             var messages = await conv.GetMessageCountAsync();
             var members = await conv.GetMembersAsync();
-            var invitedMembers = await conv.GetInvitedMembersAsync();
+            var userIsMember = await members.ToAsyncEnumerable().AnyAwaitAsync(MatchesUser);
 
             return new
             {
@@ -78,11 +81,9 @@ public class ConversationsController : ControllerBase
 
                 MessageCount = messages,
 
+                UserIsMember = userIsMember,
+                UserIsInvited = !userIsMember,
                 Members = members.ToAsyncEnumerable().SelectAwait(CreateUserDtoAsync),
-                InvitedMembers = invitedMembers.ToAsyncEnumerable().SelectAwait(CreateUserDtoAsync),
-
-                UserIsMember = await members.ToAsyncEnumerable().AnyAwaitAsync(MatchesUser),
-                UserIsInvited = await invitedMembers.ToAsyncEnumerable().AnyAwaitAsync(MatchesUser),
 
                 Kind = (await conv.CheckIsGroupConversationAsync()) ? "Group" : "OneOnOne"
             };
@@ -227,22 +228,8 @@ public class ConversationsController : ControllerBase
             .FirstOrDefaultAsync();
         if (conversation == null) return BadRequest("No such conversation found");
 
-        var currentMembers = await conversation.GetMembersAsync();
-        var currentInvites = await conversation.GetInvitedMembersAsync();
-        var current = currentMembers.Concat(currentInvites);
-
-        var query = await current.ToAsyncEnumerable()
-            .WhereAwait(async m => (await m.GetIdAsync()) == targetUserId)
-            .CountAsync();
-        if (query != 0) return BadRequest("User already a member or invited to conversation");
-
-        await conversation.InviteToConversationAsync(new Invitation()
-        {
-            InviterId = await currentUser.GetIdAsync(),
-            InvitedId = await targetUser.GetIdAsync(),
-            Timestamp = DateTime.UtcNow
-        });
-
+        var invitation = _grainFactory.GetGrain<IConversationInviteGrain>(Guid.NewGuid())!;
+        await invitation.InviteUserAsync(currentUser, targetUser, conversation);
         return Ok();
     }
 
@@ -255,16 +242,21 @@ public class ConversationsController : ControllerBase
         var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
         var id = Guid.Parse(convId);
 
-        var conversation = await
-            (await currentUser.GetConversationsAsync()).ToAsyncEnumerable()
-            .WhereAwait(async conv => (await conv.GetIdAsync()) == id)
-            .FirstOrDefaultAsync();
+        var inviteIds = await currentUser.GetInvitationsAsync()!;
+        var invitations = await inviteIds.ToAsyncEnumerable().WhereAwait(async i =>
+        {
+            var conv = await i.GetConversationAsync();
+            var convId = await conv.GetIdAsync();
+            var check = convId == id;
+            return check;
 
-        if (conversation == null) return BadRequest("No such conversation found");
+        }).ToListAsync();
 
-        var invitation = await conversation.GetInvitationAsync(currentUser);
-        if (invitation == null) return BadRequest("No such invitation found");
-        await conversation.ResolveInvitationAsync(invitation, decision);
+        for (int i = 0; i < invitations.Count; i++)
+        {
+            var invite = invitations[i];
+            await currentUser.ResolveInvitationAsync(invite, decision);
+        }
 
         return Ok();
     }

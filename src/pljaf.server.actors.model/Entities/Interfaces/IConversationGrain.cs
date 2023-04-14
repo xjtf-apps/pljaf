@@ -11,16 +11,13 @@ public interface IConversationGrain : IGrainWithGuidKey
     [AlwaysInterleave] Task<int> GetMessageCountAsync();
     [AlwaysInterleave] Task<bool> CheckIsGroupConversationAsync();
     [AlwaysInterleave] Task<List<IUserGrain>> GetMembersAsync();
-    [AlwaysInterleave] Task<List<IUserGrain>> GetInvitedMembersAsync();
-    [AlwaysInterleave] Task<Invitation?> GetInvitationAsync(IUserGrain invitedUser);
     [AlwaysInterleave] Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null);
 
     Task SetNameAsync(string name);
     Task SetTopicAsync(string topic);
     Task PostMessageAsync(IMessageGrain message);
     Task LeaveConversationAsync(IUserGrain leavingUser);
-    Task InviteToConversationAsync(Invitation invitation);
-    Task ResolveInvitationAsync(Invitation invitation, bool accepted);
+    Task EnterConversationAsync(IUserGrain enteringUser);
     Task InitializeNewConversationAsync(IUserGrain initiator, IUserGrain contact, IMessageGrain firstMessage);
     Task InitializeNewGroupConversationAsync(IUserGrain initiator, List<IUserGrain> contacts, IMessageGrain firstMessage);
 

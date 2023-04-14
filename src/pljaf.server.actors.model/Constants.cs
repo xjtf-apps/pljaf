@@ -15,6 +15,7 @@ public static class Constants
             public const string Profile = "v1/user/profile";
             public const string Tokens = "v1/user/tokens";
             public const string Contacts = "v1/user/contacts";
+            public const string Invitations = "v1/user/invitations";
             public const string Conversations = "v1/user/conversations";
         }
 
@@ -23,7 +24,6 @@ public static class Constants
             public const string Name = "v1/conversation/name";
             public const string Topic = "v1/conversation/topic";
             public const string Members = "v1/conversation/members";
-            public const string Invitations = "v1/conversation/invitations";
             public const string Communications = "v1/conversations/communications";
         }
 

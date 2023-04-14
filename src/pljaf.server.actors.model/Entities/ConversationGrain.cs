@@ -11,7 +11,6 @@ public class ConversationGrain : Grain, IConversationGrain
     private readonly IPersistentState<StringValue> _topic;
     private readonly IPersistentState<List<StringValue>> _memberIds;
     private readonly IPersistentState<List<Guid>> _communicationIds;
-    private readonly IPersistentState<List<Invitation>> _invitations;
 
     private readonly ObserverManager<IConvNameChangedObserver> _nameChangedManager;
     private readonly ObserverManager<IConvTopicChangedObserver> _topicChangedManager;
@@ -24,13 +23,11 @@ public class ConversationGrain : Grain, IConversationGrain
         [PersistentState(Constants.StoreKeys.Conversation.Name)]IPersistentState<StringValue> name,
         [PersistentState(Constants.StoreKeys.Conversation.Topic)]IPersistentState<StringValue> topic,
         [PersistentState(Constants.StoreKeys.Conversation.Members)]IPersistentState<List<StringValue>> members,
-        [PersistentState(Constants.StoreKeys.Conversation.Invitations)]IPersistentState<List<Invitation>> invitations,
         [PersistentState(Constants.StoreKeys.Conversation.Communications)]IPersistentState<List<Guid>> communications)
     {
         _name = name;
         _topic = topic;
         _memberIds = members;
-        _invitations = invitations;
         _communicationIds = communications;
 
         var observersTimespan = TimeSpan.FromMinutes(5);
@@ -47,7 +44,6 @@ public class ConversationGrain : Grain, IConversationGrain
     public async Task<int> GetMessageCountAsync() => await Task.FromResult(_communicationIds.State.Count);
     public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_memberIds.State.Count() > 2);
     public async Task<List<IUserGrain>> GetMembersAsync() => await Task.FromResult(_memberIds.State.Select(userId => GrainFactory.GetGrain<IUserGrain>(userId.Value!)).ToList());
-    public async Task<List<IUserGrain>> GetInvitedMembersAsync() => await Task.FromResult(_invitations.State.Select(inv => inv.InvitedId).Distinct().Select(invId => GrainFactory.GetGrain<IUserGrain>(invId)).ToList());
 
     public async Task PostMessageAsync(IMessageGrain message)
     {
@@ -67,38 +63,16 @@ public class ConversationGrain : Grain, IConversationGrain
         await _topicChangedManager.Notify(sub => sub.OnTopicChanged(topic));
     }
 
+    public async Task EnterConversationAsync(IUserGrain enteringUser)
+    {
+        await _memberIds.AddItemAndPersistAsync(StringValue.New(await enteringUser.GetIdAsync()));
+        await _membersChangedManager.Notify(sub => sub.OnMemberJoined(enteringUser));
+    }
+
     public async Task LeaveConversationAsync(IUserGrain leavingUser)
     {
         await _memberIds.RemoveItemAndPersistAsync(StringValue.New(await leavingUser.GetIdAsync()));
         await _membersChangedManager.Notify(sub => sub.OnMemberLeft(leavingUser));
-    }
-
-    public async Task InviteToConversationAsync(Invitation invitation)
-    {
-        await _invitations.AddItemAndPersistAsync(invitation);
-        await _invitesChangedManager.Notify(sub => sub.OnMemberInvited(GrainFactory.GetGrain<IUserGrain>(invitation.InviterId), GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId)));
-    }
-
-    public async Task<Invitation?> GetInvitationAsync(IUserGrain invitedUser)
-    {
-        var userId = await invitedUser.GetIdAsync();
-        var invitation = await _invitations.State.ToAsyncEnumerable()
-            .Where(inv => inv.InvitedId == userId)
-            .LastOrDefaultAsync();
-
-        return invitation;
-    }
-
-    public async Task ResolveInvitationAsync(Invitation invitation, bool accepted)
-    {
-        var invitedUser = GrainFactory.GetGrain<IUserGrain>(invitation.InvitedId);
-        await _invitations.RemoveItemAndPersistAsync(invitation);
-        await RemoveOtherInvitationsAsync(invitedUser);
-        if (accepted)
-        {
-            await _memberIds.AddItemAndPersistAsync(StringValue.New(invitation.InvitedId));
-            await _membersChangedManager.Notify(sub => sub.OnMemberJoined(invitedUser));
-        }
     }
 
     public async Task InitializeNewConversationAsync(IUserGrain initiator, IUserGrain contact, IMessageGrain firstMessage)
@@ -139,16 +113,6 @@ public class ConversationGrain : Grain, IConversationGrain
         }
 
         return messages;
-    }
-
-    private async Task RemoveOtherInvitationsAsync(IUserGrain invited)
-    {
-        var userId = await invited.GetIdAsync();
-        var invitations = _invitations.State.Where(inv => inv.InvitedId == userId).ToList();
-        await invitations.ToAsyncEnumerable().ForEachAwaitAsync(async invitation =>
-        {
-            await _invitations.RemoveItemAndPersistAsync(invitation);
-        });
     }
 
     #region observers
