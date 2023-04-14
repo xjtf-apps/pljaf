@@ -9,17 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.client.model", "src\p
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.client.model.contracts", "src\pljaf.client.model.contracts\pljaf.client.model.contracts.csproj", "{9561DC80-917D-4D1C-B56C-1F72ABE259AF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.client.app", "src\pljaf.client.app\pljaf.client.app.csproj", "{902B0CEE-63C8-4624-B59B-7F071194F8A0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.actors.app", "src\pljaf.server.actors.app\pljaf.server.actors.app.csproj", "{76457788-7993-4C49-AF4F-9B8C6A4B87B1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.actors.model", "src\pljaf.server.actors.model\pljaf.server.actors.model.csproj", "{10B9D8F1-BB21-4337-B783-D86F8E35E273}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pljaf.server.api", "src\pljaf.server.api\pljaf.server.api.csproj", "{FB55194A-884E-453B-91C7-773B5C0BFC6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.api", "src\pljaf.server.api\pljaf.server.api.csproj", "{FB55194A-884E-453B-91C7-773B5C0BFC6F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{55F837DD-EBDF-4426-83BB-BE42E3E43DA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pljaf.server.actors.model.test", "test\pljaf.server.actors.model.test\pljaf.server.actors.model.test.csproj", "{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "pljaf.server.actors.model.test", "test\pljaf.server.actors.model.test\pljaf.server.actors.model.test.csproj", "{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +33,6 @@ Global
 		{9561DC80-917D-4D1C-B56C-1F72ABE259AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9561DC80-917D-4D1C-B56C-1F72ABE259AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9561DC80-917D-4D1C-B56C-1F72ABE259AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{902B0CEE-63C8-4624-B59B-7F071194F8A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{902B0CEE-63C8-4624-B59B-7F071194F8A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{902B0CEE-63C8-4624-B59B-7F071194F8A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{902B0CEE-63C8-4624-B59B-7F071194F8A0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{76457788-7993-4C49-AF4F-9B8C6A4B87B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{76457788-7993-4C49-AF4F-9B8C6A4B87B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76457788-7993-4C49-AF4F-9B8C6A4B87B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -62,7 +56,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B9443AE5-81E7-4EAE-ABC4-EC0DEFDAB651} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{9561DC80-917D-4D1C-B56C-1F72ABE259AF} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
-		{902B0CEE-63C8-4624-B59B-7F071194F8A0} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{76457788-7993-4C49-AF4F-9B8C6A4B87B1} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{FB55194A-884E-453B-91C7-773B5C0BFC6F} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
