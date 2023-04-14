@@ -1,5 +1,4 @@
 ﻿using pljaf.server.model;
-using System.Diagnostics;
 
 namespace pljaf.server.api;
 
@@ -18,7 +17,6 @@ public class ForwardedUserClient
     public async Task ObservationTaskForWebSocket(List<string> messageOutbox, CancellationToken cancellation)
     {
         var observers_count = 0;
-        var watch = Stopwatch.StartNew();
         var observers = new List<ConversationObserver>();
         var conversations = new List<IConversationGrain>();
 
@@ -64,15 +62,10 @@ public class ForwardedUserClient
             await Setup();
             while (true)
             {
-                var elapsed = watch.Elapsed.TotalMilliseconds;
-                if (elapsed % 10 == 0 || elapsed % 9 == 0 || elapsed % 8 == 0 || elapsed % 7 == 0)
+                if (await Check())
                 {
-                    if (await Check())
-                    {
-                        await Drop();
-                        await Setup();
-                        watch.Restart();
-                    }
+                    await Drop();
+                    await Setup();
                 }
                 await Task.Delay(200, cancellation);
             }

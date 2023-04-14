@@ -70,6 +70,7 @@ public class ClientController : ControllerBase
             var messageContent = Encoding.UTF8.GetBytes(message);
             await webSocket.SendAsync(messageContent, messageType, true, default);
         }
+        messages.Clear();
     }
 
     private async Task CloseAsync(WebSocket webSocket)

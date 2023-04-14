@@ -2,8 +2,8 @@ using Orleans;
 using System.Text;
 using Orleans.Configuration;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.WebSockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using pljaf.server.api;
@@ -56,6 +56,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddWebSockets(options =>
+{
+    options.KeepAliveInterval = TimeSpan.FromSeconds(10);
+});
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo()
@@ -88,6 +92,6 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseWebSockets();
 app.MapControllers();
 app.Run();
