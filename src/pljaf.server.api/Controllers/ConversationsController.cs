@@ -357,14 +357,14 @@ public class ConversationRequest
 {
     public string? Name { get; set; }
     public string? Topic { get; set; }
-    public required List<string> RequestedMembers { get; set; }
-    public required MediaData? MediaMetadata { get; set; }
+    public MediaData? MediaMetadata { get; set; }
     public required string EncryptedTextData { get; set; }
+    public required List<string> RequestedMembers { get; set; }
 }
 
 public class MessageRequest
 {
-    public required MediaData? MediaMetadata { get; set; }
+    public MediaData? MediaMetadata { get; set; }
     public required string EncryptedTextData { get; set; }
 }
 
