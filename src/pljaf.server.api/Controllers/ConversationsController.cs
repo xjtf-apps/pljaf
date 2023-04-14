@@ -95,7 +95,7 @@ public class ConversationsController : ControllerBase
     [Authorize]
     [Route("/conversations/{convId}/message/new")]
     [Route("/conversations/{convId}/message/media/new")]
-    public async Task<IActionResult> PostMessage([FromBody] MessageRequest model, [FromRoute] string convId)
+    public async Task<IActionResult> PostMessage([FromForm] MessageRequest model, [FromRoute] string convId)
     {
         var msgId = Guid.NewGuid();
         var mediaData = model.MediaMetadata;
@@ -283,7 +283,7 @@ public class ConversationsController : ControllerBase
     [HttpPost]
     [Authorize]
     [Route("/conversations/new")]
-    public async Task<IActionResult> InitializeNewConversation([FromBody]ConversationRequest model)
+    public async Task<IActionResult> InitializeNewConversation([FromForm]ConversationRequest model)
     {
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
         var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId)!;
