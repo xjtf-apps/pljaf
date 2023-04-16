@@ -40,7 +40,7 @@ public class UsersController : ControllerBase
     {
         if (IsValidPhoneNumber(phone))
         {
-            
+
             try
             {
                 InitVerificationClient();
