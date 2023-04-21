@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authorization;
 
 using voks.server.model;
@@ -14,6 +15,7 @@ public class ProfileController : ControllerBase
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtTokenService;
     private readonly MediaSettingsService _mediaSettingsService;
+    private readonly FileExtensionContentTypeProvider _mimeMappingService;
 
     public ProfileController(
         IGrainFactory grainFactory,
@@ -23,6 +25,7 @@ public class ProfileController : ControllerBase
         _grainFactory = grainFactory;
         _jwtTokenService = jwtTokenService;
         _mediaSettingsService = mediaSettingsService;
+        _mimeMappingService = new FileExtensionContentTypeProvider();
     }
 
     [HttpGet]
@@ -43,6 +46,27 @@ public class ProfileController : ControllerBase
             DisplayName = contactProfile.DisplayName,
             StatusLine = contactProfile.StatusLine
         });
+    }
+
+    [HttpGet]
+    //[Authorize] // WARN: dangerous!
+    [AllowAnonymous]
+    [Route("/user/profile/picture")]
+    public async Task<IActionResult> GetUserProfilePicture(string phoneNumber)
+    {
+        var contact = _grainFactory.GetGrain<IUserGrain>(phoneNumber);
+        var contactProfile = await contact.GetProfileAsync();
+        if (contactProfile?.ProfilePicture != null &&
+            contactProfile?.ProfilePicture.Filename != null)
+        {
+            var profilePicture = contactProfile.ProfilePicture;
+            var filename = profilePicture.Filename;
+            var data = profilePicture.BinaryData;
+            var ext = Path.GetExtension(filename);
+
+            return File(data, _mimeMappingService.Mappings[ext]);
+        }
+        return NoContent();
     }
 
     [HttpPost]

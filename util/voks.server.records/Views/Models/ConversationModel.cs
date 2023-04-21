@@ -4,6 +4,8 @@
     {
         public string Id { get; set; }
         public string Kind { get; set; } = "<Unknown>";
+        public string Name { get; set; } = "";
+        public string Topic { get; set; } = "";
         public List<string> Members { get; set; } = new();
         public List<MessageModel> Messages { get; set; } = new();
 

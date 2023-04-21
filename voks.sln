@@ -19,6 +19,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{55F837DD-E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "voks.server.actors.model.test", "test\voks.server.actors.model.test\voks.server.actors.model.test.csproj", "{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{6436F71F-B259-4EB6-8650-E5C89B82707C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "voks.server.records", "util\voks.server.records\voks.server.records.csproj", "{555E22EA-FC38-4A2A-8786-6AC95596974C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,10 @@ Global
 		{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{555E22EA-FC38-4A2A-8786-6AC95596974C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{555E22EA-FC38-4A2A-8786-6AC95596974C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{555E22EA-FC38-4A2A-8786-6AC95596974C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{555E22EA-FC38-4A2A-8786-6AC95596974C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +68,7 @@ Global
 		{10B9D8F1-BB21-4337-B783-D86F8E35E273} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{FB55194A-884E-453B-91C7-773B5C0BFC6F} = {7674B4B5-F34E-478E-A2F7-B58EBEA2CA5B}
 		{5CF9F1BB-1A45-4739-84BF-D53B8F0B9BA1} = {55F837DD-EBDF-4426-83BB-BE42E3E43DA3}
+		{555E22EA-FC38-4A2A-8786-6AC95596974C} = {6436F71F-B259-4EB6-8650-E5C89B82707C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8F811DB3-DB0E-4BE1-A30F-BC58FEAF1186}

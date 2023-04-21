@@ -75,7 +75,7 @@
                                     <ListView.ItemTemplate>
                                         <DataTemplate DataType="local:ConversationModel">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Path=Id}" Width="220" />
+                                                <TextBlock Text="{Binding Path=Id}" Width="230" />
                                                 <TextBlock Text="{Binding Path=Kind}" Width="80" />
                                                 <ListView ItemsSource="{Binding Members}" SelectionChanged="ConvoMembers_SelectionChanged" SelectionMode="Single" Width="auto">
                                                     <ListView.ItemsPanel>
@@ -94,6 +94,10 @@
                                     </ListView.ItemTemplate>
                                 </ListView>
                                 <StackPanel Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0" HorizontalAlignment="Right">
+                                    <TextBlock Text="Name" Width="180" Margin="0,0,0,5" />
+                                    <TextBox x:Name="ConvoName" d:Text="First convo" Width="180" Margin="0,0,0,10" />
+                                    <TextBlock Text="Topic" Width="180" Margin="0,0,0,5" />
+                                    <TextBox x:Name="ConvoTopic" d:Text="Discussing the new app" Width="180" Margin="0,0,0,10" />
                                     <TextBlock Text="Member" Width="180" Margin="0,0,0,5" />
                                     <TextBox x:Name="MemberPhone" d:Text="+4426579500" Width="180" Margin="0,0,0,10" />
                                     <Button x:Name="ConvoAddMember" Content="Add member" HorizontalContentAlignment="Left" Width="180" Margin="0,0,0,10" Click="ConvoAddMember_Click"
@@ -118,7 +122,7 @@
                                     <ListView.ItemTemplate>
                                         <DataTemplate DataType="local:MessageModel">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Path=Conversation}" Width="220" />
+                                                <TextBlock Text="{Binding Path=Conversation}" Width="230" />
                                                 <TextBlock Text="{Binding Path=Sender}" Width="120" />
                                                 <TextBlock Text="{Binding Path=Timestamp}" Width="120" />
                                                 <TextBlock Text="{Binding Path=Text}" Width="auto" />

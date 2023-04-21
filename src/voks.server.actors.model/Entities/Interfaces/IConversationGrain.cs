@@ -11,6 +11,7 @@ public interface IConversationGrain : IGrainWithGuidKey
     [AlwaysInterleave] Task<int> GetMessageCountAsync();
     [AlwaysInterleave] Task<bool> CheckIsGroupConversationAsync();
     [AlwaysInterleave] Task<List<IUserGrain>> GetMembersAsync();
+    [AlwaysInterleave] Task<IMessageGrain> GetLastMessageAsync();
     [AlwaysInterleave] Task<List<IMessageGrain>> GetMessagesAsync(DateTime? datetimeFrom = null, DateTime? datetimeTo = null);
 
     Task SetNameAsync(string name);

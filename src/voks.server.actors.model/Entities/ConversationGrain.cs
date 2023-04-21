@@ -115,6 +115,13 @@ public class ConversationGrain : Grain, IConversationGrain
         return messages;
     }
 
+    public async Task<IMessageGrain> GetLastMessageAsync()
+    {
+        var lastMessageId = _communicationIds.State.Last();
+        var message = GrainFactory.GetGrain<IMessageGrain>(lastMessageId);
+        return await Task.FromResult(message);
+    }
+
     #region observers
     public Task Subscribe(IConvNameChangedObserver nameChangedObserver)
     {

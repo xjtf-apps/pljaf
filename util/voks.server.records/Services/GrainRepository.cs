@@ -98,6 +98,8 @@ namespace voks.server.records
                     Id = convId,
                     Members = membersList,
                     Messages = messagesList,
+                    Name = await conversationGrains[i].GetNameAsync(),
+                    Topic = await conversationGrains[i].GetTopicAsync(),
                     Kind = membersList.Count == 2 ? "OneOnOne" : "Group"
                 });
             }
@@ -152,6 +154,7 @@ namespace voks.server.records
                     .ToListAsync();
 
                 var newMessages = messages
+                    .Where(m => m.Conversation == conversation.Id)
                     .Where(m => !currentMessages.Contains(m.Id))
                     .Select(m => m.Id)
                     .ToList();

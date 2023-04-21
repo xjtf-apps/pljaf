@@ -85,6 +85,10 @@ public class UsersController : ControllerBase
                     else return Unauthorized();
                 }
             }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
             finally
             {
                 ClearVerificationClient();

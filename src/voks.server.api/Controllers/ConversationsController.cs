@@ -73,6 +73,18 @@ public class ConversationsController : ControllerBase
             var members = await conv.GetMembersAsync();
             var userIsMember = await members.ToAsyncEnumerable().AnyAwaitAsync(MatchesUser);
 
+            var lastMessage = await conv.GetLastMessageAsync();
+            var lastMessageSender = await lastMessage.GetSenderAsync();
+            var lastMessageText = await lastMessage.GetEncryptedTextDataAsync();
+            var lastMessageMedia = await lastMessage.GetMediaReferenceAsync();
+
+            var lastMessageSenderDisplay =
+                (await lastMessageSender.GetProfileAsync()).DisplayName?.Split(' ')[0] ??
+                (await lastMessageSender.GetIdAsync());
+
+            var lastMessageContentDisplay =
+                lastMessageMedia?.Filename != null ? $"privitak 🖇" : lastMessageText;
+
             return new
             {
                 ConvId = id,
@@ -80,6 +92,9 @@ public class ConversationsController : ControllerBase
                 ConversationTopic = topic,
 
                 MessageCount = messages,
+                LastMessageSender = await CreateUserDtoAsync(lastMessageSender),
+                LastMessagePreview = lastMessageContentDisplay,
+                LastMessageTimestamp = await lastMessage.GetTimestampAsync(),
 
                 UserIsMember = userIsMember,
                 UserIsInvited = !userIsMember,
