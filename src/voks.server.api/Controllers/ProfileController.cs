@@ -49,8 +49,7 @@ public class ProfileController : ControllerBase
     }
 
     [HttpGet]
-    //[Authorize] // WARN: dangerous!
-    [AllowAnonymous]
+    [Authorize]
     [Route("/user/profile/picture")]
     public async Task<IActionResult> GetUserProfilePicture(string phoneNumber)
     {
@@ -63,6 +62,8 @@ public class ProfileController : ControllerBase
             var filename = profilePicture.Filename;
             var data = profilePicture.BinaryData;
             var ext = Path.GetExtension(filename);
+
+            AddCacheControlHeader(durationMinutes: 10);
 
             return File(data, _mimeMappingService.Mappings[ext]);
         }
@@ -95,12 +96,16 @@ public class ProfileController : ControllerBase
         var currentUser = _grainFactory.GetGrain<IUserGrain>(currentUserId);
         var currentProfile = await currentUser.GetProfileAsync();
 
-        var maxSize = _mediaSettingsService.MaxProfilePictureSize;
-        if (file.Length > maxSize) return BadRequest("File size too large");
-
         using var readStream = file.OpenReadStream();
         using var outputStream = new MemoryStream();
-        await readStream.CopyToAsync(outputStream);
+
+        var image = Image.Load(readStream);
+        var imageMutatedWidth = image.Width;
+        var imageMutatedHeight = image.Height;
+        if (image.Width > 256) { imageMutatedWidth = 256; imageMutatedHeight = 0; }
+        if (image.Height > 256) { imageMutatedHeight = 256; imageMutatedWidth = 0; }
+        image.Mutate(processor => processor.Resize(imageMutatedWidth, imageMutatedHeight, KnownResamplers.Lanczos3));
+        await image.SaveAsPngAsync(outputStream);
 
         await currentUser.SetProfileAsync(new Profile()
         {
@@ -132,5 +137,12 @@ public class ProfileController : ControllerBase
             ProfilePicture = null
         });
         return Ok();
+    }
+
+    private void AddCacheControlHeader(int durationMinutes)
+    {
+        var durationSeconds = durationMinutes * 60;
+        var durationCache = $"max-age={durationSeconds}";
+        HttpContext.Response.Headers["Cache-Control"] = durationCache;
     }
 }

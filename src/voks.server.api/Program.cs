@@ -56,6 +56,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields =
+        Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Request |
+        Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Response;
+});
 builder.Services.AddWebSockets(options =>
 {
     options.KeepAliveInterval = TimeSpan.FromSeconds(10);
@@ -87,6 +93,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpLogging();
 }
 
 //app.UseHttpsRedirection();
