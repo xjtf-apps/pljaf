@@ -1,4 +1,5 @@
-﻿using Orleans.Hosting;
+﻿using System.Windows;
+using Orleans.Hosting;
 using Orleans.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,11 +14,18 @@ public partial class Program
 {
     public static void Main(string[] args)
     {
-        Host.CreateDefaultBuilder(args)
-            .UseOrleansClient(ConfigureOrleansClient)
-            .ConfigureServices(ConfigureServices)
-            .Build()
-            .Run();
+        try
+        {
+            Host.CreateDefaultBuilder(args)
+                .UseOrleansClient(ConfigureOrleansClient)
+                .ConfigureServices(ConfigureServices)
+                .Build()
+                .Run();
+        }
+        catch (Exception e)
+        {
+            MessageBox.Show(e.Message);
+        }
     }
 
     private static void ConfigureServices(IServiceCollection services)
