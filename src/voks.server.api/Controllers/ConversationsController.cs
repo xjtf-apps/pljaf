@@ -140,10 +140,11 @@ public class ConversationsController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    [Route("/conversation/{convId}/messages")]
-    [Route("/conversation/{convId}/messages/last/{n}")]
-    [Route("/conversation/{convId}/messages/from/{from}/to/{to}")]
-    public async Task<IActionResult> GetMessages(string convId, DateTime? from = null, DateTime? to = null, int? n = null)
+    [Route("/conversations/{convId}/messages")]
+    //[Route("/conversations/{convId}/messages/last/{n}")]
+    //[Route("/conversations/{convId}/messages/from/{from}/to/{to}")]
+    [Route("/conversations/{convId}/messages/page/{index}/size/{pageSize}")]
+    public async Task<IActionResult> GetMessages(string convId, int? index = null, int? pageSize = null)
     {
         var conversationId = Guid.Parse(convId);
         var currentUserId = _jwtTokenService.GetUserIdFromRequest(HttpContext)!;
@@ -154,13 +155,18 @@ public class ConversationsController : ControllerBase
             .WhereAwait(async conv => (await conv.GetIdAsync()) == conversationId)
             .FirstOrDefaultAsync();
 
+
         if (conversation == null) return BadRequest("No such conversation found");
-        n ??= await conversation.GetMessageCountAsync();
+        var totalMessageCount = await conversation.GetMessageCountAsync();
+        pageSize ??= index == null ? totalMessageCount : 100;
+        index ??= 0;
 
         var messages = await (await conversation.GetMessagesAsync()).ToAsyncEnumerable()
-            .WhereAwait(async m => from == null || (await m.GetTimestampAsync()) > from)
-            .WhereAwait(async m => to == null || (await m.GetTimestampAsync()) < to)
-            .TakeLast((int)n).ToListAsync();
+            .Skip((int)index * ((int)pageSize)).Take((int)pageSize)
+            .ToListAsync();
+
+        var nextPageIsAvailable =
+            ((totalMessageCount / pageSize) - 1) > index;
 
         return Ok(new
         {
@@ -174,13 +180,18 @@ public class ConversationsController : ControllerBase
                     Timestamp = await msg.GetTimestampAsync(),
                     EncryptedTextData = await msg.GetEncryptedTextDataAsync(),
                     Sender = new UserId(await (await msg.GetSenderAsync()).GetIdAsync()),
-                    MediaRef = mediaRef != null ? new AnyMediaReference { StoreId =  mediaRef.StoreId } : null,
+                    MediaRef = mediaRef != null ? new AnyMediaReference { StoreId = mediaRef.StoreId } : null,
                 };
             }),
             EarliestMessageTimestamp = await messages.ToAsyncEnumerable().MinAwaitAsync(async m => await m.GetTimestampAsync()),
             LastestMessageTimestamp = await messages.ToAsyncEnumerable().MaxAwaitAsync(async m => await m.GetTimestampAsync()),
-            SelectedMessagesCount = messages.Count,
-            TotalMessageCount = await conversation.GetMessageCountAsync()
+            TotalMessageCount = await conversation.GetMessageCountAsync(),
+
+            PageInfo = new {
+                Size = (int)pageSize,
+                CurrentIndex = (int)index,
+                FollowingIndex = nextPageIsAvailable ? index + 1 : null,
+            }
         });
     }
 
