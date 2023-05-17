@@ -47,7 +47,7 @@ public sealed class ConversationObserver : ICommunicationObserver
 
     public async Task OnMemberInvited(IUserGrain inviter, IUserGrain invited)
     {
-        OnChange?.Invoke(this, $"Conversation:MemberLeft, ConvId={await _conversation.GetIdAsync()}, UserIdInviter={await inviter.GetIdAsync()}, UserIdInvited={await invited.GetIdAsync()}");
+        OnChange?.Invoke(this, $"Conversation:MemberInvited, ConvId={await _conversation.GetIdAsync()}, UserIdInviter={await inviter.GetIdAsync()}, UserIdInvited={await invited.GetIdAsync()}");
     }
 
     public async Task OnMessagePosted(IMessageGrain message)
