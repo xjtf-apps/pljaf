@@ -111,7 +111,7 @@ public class UsersController : ControllerBase
             (await user.GetTokensAsync()).RefreshToken != model.RefreshToken ||
             (await user.GetTokensAsync()).RefreshTokenExpires <= DateTime.UtcNow)
         {
-            return BadRequest("Invalid access token or refresh token");
+            return BadRequest("Invalid access token, refresh token or refresh token expired");
         }
 
         var newAccessToken = _jwtTokenService.CreateToken(principal.Claims.ToArray());

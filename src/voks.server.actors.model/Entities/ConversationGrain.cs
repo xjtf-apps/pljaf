@@ -42,7 +42,7 @@ public class ConversationGrain : Grain, IConversationGrain
     public async Task<string> GetNameAsync() => await Task.FromResult(_name.State.Value ?? "");
     public async Task<string> GetTopicAsync() => await Task.FromResult(_topic.State.Value ?? "");
     public async Task<int> GetMessageCountAsync() => await Task.FromResult(_communicationIds.State.Count);
-    public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_memberIds.State.Count() > 2);
+    public async Task<bool> CheckIsGroupConversationAsync() => await Task.FromResult(_memberIds.State.Count > 2);
     public async Task<List<IUserGrain>> GetMembersAsync() => await Task.FromResult(_memberIds.State.Select(userId => GrainFactory.GetGrain<IUserGrain>(userId.Value!)).ToList());
 
     public async Task PostMessageAsync(IMessageGrain message)
@@ -117,6 +117,9 @@ public class ConversationGrain : Grain, IConversationGrain
 
     public async Task<IMessageGrain> GetLastMessageAsync()
     {
+        // TODO: change to use persisted Id of the last message,
+        //       not to load all messages and take the last one!
+
         var lastMessageId = _communicationIds.State.Last();
         var message = GrainFactory.GetGrain<IMessageGrain>(lastMessageId);
         return await Task.FromResult(message);

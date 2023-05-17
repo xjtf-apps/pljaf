@@ -12,15 +12,18 @@ namespace voks.server.api.Controllers;
 public class ConversationsController : ControllerBase
 {
     private readonly IGrainFactory _grainFactory;
+    private readonly UserNameWriter _userNameWriter;
     private readonly JwtTokenService _jwtTokenService;
     private readonly MediaSettingsService _mediaSettingsService;
 
     public ConversationsController(
         IGrainFactory grainFactory,
+        UserNameWriter userNameWriter,
         JwtTokenService jwtTokenService,
         MediaSettingsService mediaSettingsService)
     {
         _grainFactory = grainFactory;
+        _userNameWriter = userNameWriter;
         _jwtTokenService = jwtTokenService;
         _mediaSettingsService = mediaSettingsService;
     }
@@ -51,37 +54,20 @@ public class ConversationsController : ControllerBase
             return query;
         }
 
-        async ValueTask<User> CreateUserDtoAsync(IUserGrain user)
-        {
-            var avatar = await user.GetAvatarAsync();
-
-            return new User
-            {
-                Id = new UserId(await user.GetIdAsync()),
-                DisplayName = (await user.GetProfileAsync())?.DisplayName,
-                StatusLine = (await user.GetProfileAsync())?.StatusLine,
-                AvatarRef = avatar != null ? new ImageRef() { StoreId = avatar.StoreId } : null,
-            };
-        }
-
         return Ok(await conversations.Concat(invitedConversations).ToAsyncEnumerable().WhereAwait(MatchesQuery).SelectAwait(async conv =>
         {
             var id = await conv.GetIdAsync();
             var name = await conv.GetNameAsync();
             var topic = await conv.GetTopicAsync();
-            var messages = await conv.GetMessageCountAsync();
             var members = await conv.GetMembersAsync();
+            var messages = await conv.GetMessageCountAsync();
             var userIsMember = await members.ToAsyncEnumerable().AnyAwaitAsync(MatchesUser);
 
             var lastMessage = await conv.GetLastMessageAsync();
             var lastMessageSender = await lastMessage.GetSenderAsync();
             var lastMessageText = await lastMessage.GetEncryptedTextDataAsync();
             var lastMessageMedia = await lastMessage.GetMediaReferenceAsync();
-
-            var lastMessageSenderDisplay =
-                (await lastMessageSender.GetProfileAsync()).DisplayName?.Split(' ')[0] ??
-                (await lastMessageSender.GetIdAsync());
-
+            var lastMessageSenderDisplay = await _userNameWriter.GetFirstNameOrId(lastMessageSender);
             var lastMessageContentDisplay =
                 lastMessageMedia?.Filename != null ? $"privitak 🖇" : lastMessageText;
 
@@ -155,7 +141,6 @@ public class ConversationsController : ControllerBase
             .WhereAwait(async conv => (await conv.GetIdAsync()) == conversationId)
             .FirstOrDefaultAsync();
 
-
         if (conversation == null) return BadRequest("No such conversation found");
         var totalMessageCount = await conversation.GetMessageCountAsync();
         pageSize ??= index == null ? totalMessageCount : 100;
@@ -171,21 +156,23 @@ public class ConversationsController : ControllerBase
         return Ok(new
         {
             ConvId = new ConvId(conversationId),
+            SelectedMessageCount = messages.Count,
             SelectedMessages = messages.ToAsyncEnumerable().SelectAwait(async msg =>
             {
+                var sender = await msg.GetSenderAsync();
                 var mediaRef = await msg.GetMediaReferenceAsync();
 
                 return new
                 {
+                    Id = await msg.GetIdAsync(),
+                    Sender = await CreateUserDtoAsync(sender),
                     Timestamp = await msg.GetTimestampAsync(),
                     EncryptedTextData = await msg.GetEncryptedTextDataAsync(),
-                    Sender = new UserId(await (await msg.GetSenderAsync()).GetIdAsync()),
                     MediaRef = mediaRef != null ? new AnyMediaReference { StoreId = mediaRef.StoreId } : null,
                 };
             }),
-            EarliestMessageTimestamp = await messages.ToAsyncEnumerable().MinAwaitAsync(async m => await m.GetTimestampAsync()),
-            LastestMessageTimestamp = await messages.ToAsyncEnumerable().MaxAwaitAsync(async m => await m.GetTimestampAsync()),
             TotalMessageCount = await conversation.GetMessageCountAsync(),
+            LastestMessageTimestamp = await (await conversation.GetLastMessageAsync()).GetTimestampAsync(),
 
             PageInfo = new {
                 Size = (int)pageSize,
@@ -275,6 +262,8 @@ public class ConversationsController : ControllerBase
             var convId = await conv.GetIdAsync();
             var check = convId == id;
             return check;
+
+            // query could be made simpler!
 
         }).ToListAsync();
 
@@ -376,6 +365,19 @@ public class ConversationsController : ControllerBase
         if (mediaDataType == MediaDataType.Audio && mediaSize > _mediaSettingsService.MaxAudioSize) return false;
         if (mediaDataType == MediaDataType.Video && mediaSize > _mediaSettingsService.MaxVideoSize) return false;
         return true;
+    }
+
+    private async ValueTask<User> CreateUserDtoAsync(IUserGrain user)
+    {
+        var avatar = await user.GetAvatarAsync();
+
+        return new User
+        {
+            Id = new UserId(await user.GetIdAsync()),
+            DisplayName = (await user.GetProfileAsync())?.DisplayName,
+            StatusLine = (await user.GetProfileAsync())?.StatusLine,
+            AvatarRef = avatar != null ? new ImageRef() { StoreId = avatar.StoreId } : null,
+        };
     }
 }
 
