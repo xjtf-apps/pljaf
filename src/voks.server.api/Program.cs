@@ -29,6 +29,7 @@ builder.Services.AddTransient<TwillioSettingsService>();
 builder.Services.AddTransient<MediaSettingsService>();
 builder.Services.AddTransient<JwtSettingsService>();
 builder.Services.AddTransient<JwtTokenService>();
+builder.Services.AddSingleton<UserNameWriter>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -82,7 +83,7 @@ builder.Services.AddSwaggerGen(options =>
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
-        { new OpenApiSecurityScheme() { Reference = new OpenApiReference() { Type = ReferenceType.SecurityScheme, Id = "Bearer" }}, new string[] { } }
+        { new OpenApiSecurityScheme() { Reference = new OpenApiReference() { Type = ReferenceType.SecurityScheme, Id = "Bearer" }}, Array.Empty<string>() }
     });
 });
 
