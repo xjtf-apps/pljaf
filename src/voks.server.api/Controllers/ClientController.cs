@@ -15,6 +15,7 @@ public class ClientController : ControllerBase
     private readonly IGrainFactory _grainFactory;
     private readonly JwtTokenService _jwtService;
     private readonly IHostApplicationLifetime _applicationLifetime;
+    private readonly WebSocketClientAuthorization _webSocketAuthorization;
 
     private string? CurrentUserId => _jwtService.GetUserIdFromRequest(HttpContext);
     private IUserGrain CurrentUser => _grainFactory.GetGrain<IUserGrain>(CurrentUserId);
@@ -23,19 +24,28 @@ public class ClientController : ControllerBase
     public ClientController(
         IGrainFactory grainFactory,
         JwtTokenService jwtTokenService,
-        IHostApplicationLifetime applicationLifetime)
+        IHostApplicationLifetime applicationLifetime,
+        WebSocketClientAuthorization webSocketAuthorization)
     {
         _grainFactory = grainFactory;
         _jwtService = jwtTokenService;
         _applicationLifetime = applicationLifetime;
+        _webSocketAuthorization = webSocketAuthorization;
     }
 
     [HttpGet]
     [Authorize]
-    [Route("/client/subscribe")]
-    public async Task Subscribe()
+    [Route("/client/subscribe/ticket")]
+    public IActionResult GetTicket()
     {
-        if (HttpContext.WebSockets.IsWebSocketRequest)
+        return Ok(_webSocketAuthorization.IssueTicket());
+    }
+
+    [HttpGet]
+    [Route("/client/subscribe/{ticket}")]
+    public async Task Subscribe(string? ticket = null)
+    {
+        if (HttpContext.WebSockets.IsWebSocketRequest && _webSocketAuthorization.VerifyTicket(ticket))
         {
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var webSocketMessages = new List<string>();

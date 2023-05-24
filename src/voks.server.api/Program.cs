@@ -25,6 +25,7 @@ builder.Host.UseOrleansClient((context, builder) =>
 });
 
 // Add services to the container.
+builder.Services.AddTransient<WebSocketClientAuthorization>();
 builder.Services.AddTransient<TwillioSettingsService>();
 builder.Services.AddTransient<MediaSettingsService>();
 builder.Services.AddTransient<JwtSettingsService>();
